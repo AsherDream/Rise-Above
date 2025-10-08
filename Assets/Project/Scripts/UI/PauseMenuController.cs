@@ -1,5 +1,6 @@
 using UnityEngine;
 using Sirenix.OdinInspector;
+using UnityEngine.SceneManagement;
 
 public class PauseController : MonoBehaviour
 {
@@ -9,6 +10,10 @@ public class PauseController : MonoBehaviour
     [Title("Key Bind")]
     [InfoBox("Press this key to toggle pause/unpause the game.")]
     [SerializeField] private KeyCode pauseKey = KeyCode.Escape;
+
+    [Title("References")]
+    [SerializeField, Required] private GameObject settingsPanel;
+
 
     private bool isPaused = false;
 
@@ -46,4 +51,44 @@ public class PauseController : MonoBehaviour
             Time.timeScale = 1f;
         }
     }
+
+    //---------------- Button Functions-------------------
+
+    public void OnResume()
+    {
+        Debug.Log("Resume pressed");
+        TogglePause():
+    }
+
+    public void OnSettings()
+    {
+        Debug.Log("Settings pressed");
+        openPanel(settingsPanel);
+    }
+
+    public void OnSaveAndLoad()
+    {
+        Debug.Log("Save/Load Pressed");
+        OpenPanel(saveloadPanel)
+    }
+
+    public void OnReturnToMainMenu()
+    {
+        Debug.log("Return to Main Menu prassed");
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    public void OnExitGame()
+    {
+        Debug.Log("Exit Game pressed");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+
+#else
+        Application.Quit();
+#endif
+    }
 }
+
+   
