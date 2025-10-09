@@ -13,16 +13,15 @@ public class PauseController : MonoBehaviour
 
     [Title("References")]
     [SerializeField, Required] private GameObject settingsPanel;
-
+    [SerializeField] private GameObject saveLoadPanel;
 
     private bool isPaused = false;
 
     private void Update()
     {
-        // use GetKeyDown inside unscaled delta time to avoid time freeze issues
         if (Input.GetKeyDown(pauseKey))
         {
-            Debug.Log("Pause key pressed – toggling pause.");
+            Debug.Log("Pause key pressed - toggling pause.");
             TogglePause();
         }
     }
@@ -37,44 +36,41 @@ public class PauseController : MonoBehaviour
             pauseMenu.SetActive(isPaused);
         }
 
-        // Make sure timeScale resumes correctly
         Time.timeScale = isPaused ? 0f : 1f;
-
         Debug.Log(isPaused ? "Game Paused" : "Game Resumed");
     }
 
     private void OnDisable()
     {
-        // Ensure time scale resets if object is disabled
         if (isPaused)
         {
             Time.timeScale = 1f;
         }
     }
 
-    //---------------- Button Functions-------------------
+    //---------------- Button Functions -------------------
 
     public void OnResume()
     {
         Debug.Log("Resume pressed");
-        TogglePause():
+        TogglePause();
     }
 
     public void OnSettings()
     {
         Debug.Log("Settings pressed");
-        openPanel(settingsPanel);
+        OpenPanel(settingsPanel);
     }
 
     public void OnSaveAndLoad()
     {
         Debug.Log("Save/Load Pressed");
-        OpenPanel(saveloadPanel)
+        OpenPanel(saveLoadPanel);
     }
 
     public void OnReturnToMainMenu()
     {
-        Debug.log("Return to Main Menu prassed");
+        Debug.Log("Return to Main Menu pressed");
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
     }
@@ -84,11 +80,19 @@ public class PauseController : MonoBehaviour
         Debug.Log("Exit Game pressed");
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
-
 #else
         Application.Quit();
 #endif
     }
-}
 
-   
+    private void OpenPanel(GameObject panel)
+    {
+        if (panel == null)
+        {
+            Debug.LogWarning("Panel reference is missing!");
+            return;
+        }
+
+        panel.SetActive(true);
+    }
+}
