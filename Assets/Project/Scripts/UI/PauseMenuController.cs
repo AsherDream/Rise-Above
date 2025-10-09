@@ -15,6 +15,10 @@ public class PauseController : MonoBehaviour
     [SerializeField, Required] private GameObject settingsPanel;
     [SerializeField] private GameObject saveLoadPanel;
 
+    [Title("ExitPanel")]
+    [SerializeField, Required] private GameObject exitConfirmPanel;
+
+
     private bool isPaused = false;
 
     private void Update()
@@ -75,15 +79,31 @@ public class PauseController : MonoBehaviour
         SceneManager.LoadScene("MainMenu");
     }
 
-    public void OnExitGame()
+    // Called by Exit button
+    public void OnExitPressed()
     {
-        Debug.Log("Exit Game pressed");
+        if (exitConfirmPanel != null)
+            exitConfirmPanel.SetActive(true); // Show confirmation panel
+    }
+
+    // Called by "Yes" button on confirmation panel
+    public void OnExitConfirm()
+    {
+        Debug.Log("Exit confirmed.");
 #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
+    UnityEditor.EditorApplication.isPlaying = false;
 #else
         Application.Quit();
 #endif
     }
+
+    // Called by "No" button on confirmation panel
+    public void OnExitCancel()
+    {
+        if (exitConfirmPanel != null)
+            exitConfirmPanel.SetActive(false); // Hide confirmation panel
+    }
+
 
     private void OpenPanel(GameObject panel)
     {
