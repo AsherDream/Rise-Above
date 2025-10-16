@@ -15,9 +15,7 @@ public class SettingsController : MonoBehaviour
     [Header("Display Settings")]
     [SerializeField] private TMP_Dropdown displayModeDropdown;
 
-    [Header("UI References")]
-    [SerializeField] private GameObject settingsPanel;
-    [SerializeField] private GameObject pausePanel;
+    
 
     private void Start()
     {
@@ -102,11 +100,8 @@ public class SettingsController : MonoBehaviour
         Debug.Log("Settings Saved!");
     }
 
-    public void OnBackButton()
-    {
-        settingsPanel.SetActive(false);
-        pausePanel.SetActive(true);
-    }
+   
+
     #endregion
 
     private void LoadSettings()
