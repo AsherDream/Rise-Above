@@ -7,9 +7,9 @@ public class PauseController : MonoBehaviour
     [Title("Pause Menu Settings")]
     [SerializeField, Required] private GameObject pauseMenu;
 
-    [Title("Key Bind")]
-    [InfoBox("Press this key to toggle pause/unpause the game.")]
-    [SerializeField] private KeyCode pauseKey = KeyCode.Escape;
+    //[Title("Key Bind")]
+    //[InfoBox("Press this key to toggle pause/unpause the game.")]
+    //[SerializeField] private KeyCode pauseKey = KeyCode.Escape;
 
     [Title("References")]
     [SerializeField, Required] private GameObject settingsPanel;
@@ -23,11 +23,11 @@ public class PauseController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(pauseKey))
-        {
-            Debug.Log("Pause key pressed - toggling pause.");
-            TogglePause();
-        }
+        //if (Input.GetKeyDown(pauseKey))
+        //{
+            //Debug.Log("Pause key pressed - toggling pause.");
+            //TogglePause();
+        //}
     }
 
     [Button("Toggle Pause (Manual Test)")]
