@@ -435,11 +435,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 282797670}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 878d2760050de6244a2b1fb678d8bc0d, type: 3}
+  m_Script: {fileID: 11500000, guid: 74d4a751bf08d734ab07a376f305ea56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Survival
   hpSlider: {fileID: 1417382681}
-  hpText: {fileID: 0}
+  hpText: {fileID: 747363316}
   maxHP: 100
   minHP: 0
   goodItemHeal: 10
@@ -705,7 +705,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 1, b: 0.022435188, a: 1}
+  m_Color: {r: 1, g: 0, b: 0.038244247, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -719,7 +719,7 @@ MonoBehaviour:
   m_FillMethod: 4
   m_FillAmount: 1
   m_FillClockwise: 1
-  m_FillOrigin: 0
+  m_FillOrigin: 2
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
 --- !u!222 &567964954
@@ -838,7 +838,7 @@ GameObject:
   - component: {fileID: 747363317}
   - component: {fileID: 747363316}
   m_Layer: 5
-  m_Name: HP_Text
+  m_Name: HP_Text_TMP
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -860,8 +860,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 725.15, y: -661}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 1730, y: -894.19995}
+  m_SizeDelta: {x: 226.2, y: 72.35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &747363316
 MonoBehaviour:
@@ -894,8 +894,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -912,8 +912,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 60
+  m_fontSizeBase: 60
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1236,8 +1236,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 10}
+  m_AnchoredPosition: {x: 0, y: -0.000015258789}
+  m_SizeDelta: {x: 0, y: 0.000030518}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1363224113
 MonoBehaviour:
@@ -1252,7 +1252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.019173622, g: 1, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1349,8 +1349,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1698.4, y: -805.1}
-  m_SizeDelta: {x: 878.3, y: 602.2}
+  m_AnchoredPosition: {x: 1730, y: -894.2}
+  m_SizeDelta: {x: 639.6, y: 371.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1417382681
 MonoBehaviour:
