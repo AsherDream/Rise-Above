@@ -4,34 +4,6 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes:
-  - enabled: 1
-    path: Assets/Project/Scenes/MainMenu.unity
-    guid: 2edd98ee45354254aaca50d2bdacebc1
-  - enabled: 1
-    path: Assets/Project/Scenes/GamePlay/Level1.unity
-    guid: 4f5bf4118f5415e4aa86baa007966328
-  - enabled: 1
-    path: Assets/Project/Scenes/GamePlay/Level2.unity
-    guid: ff16fd041434f4549ace4735c593ba3e
-  - enabled: 1
-    path: Assets/Project/Scenes/GamePlay/Level3.unity
-    guid: 27dd756e6555d33479d7eb207dd35469
-  - enabled: 1
-    path: Assets/Project/Scenes/GamePlay/Level4.unity
-    guid: 5c07de1d1ccaccf45b3c5cd068fcaddf
-  - enabled: 1
-    path: Assets/Project/Scenes/GamePlay/Level5.unity
-    guid: 275f6799232468d48a3d8cceecda6c6d
-  - enabled: 1
-    path: Assets/Project/Scenes/GameOver.unity
-    guid: a74a3430664c0c54c979fd4151ee63ee
-  - enabled: 1
-    path: Assets/Project/Scenes/UI_Global.unity
-    guid: aa4ac3b934ae7a645b02830962dd6bd9
-  - enabled: 1
-    path: Assets/Project/Scenes/Test_Mechanics/Drag_Drop.unity
-    guid: 2d5604a9532a194419f840c4f15e46e8
-  m_configObjects:
-    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  m_Scenes: []
+  m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
