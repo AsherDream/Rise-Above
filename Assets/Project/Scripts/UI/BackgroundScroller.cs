@@ -21,7 +21,10 @@ public class BackgroundScroller : MonoBehaviour
 
     void Update()
     {
-        // Get the current local position
+        // NEW: If the inspector is open, do not scroll
+        if (ItemInspector.IsInspecting) return;
+
+        // --- All your existing code stays the same ---
         Vector2 newPosition = rect.anchoredPosition;
 
         // Check for 'left' key
@@ -45,3 +48,4 @@ public class BackgroundScroller : MonoBehaviour
         rect.anchoredPosition = newPosition;
     }
 }
+
