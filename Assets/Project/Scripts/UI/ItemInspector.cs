@@ -14,12 +14,15 @@ public class ItemInspector : MonoBehaviour
     [SerializeField, Required]
     private CanvasGroup inspectorCanvasGroup;
 
-    // NEW: Reference for the Title Text
     [SerializeField, Required]
     private TextMeshProUGUI titleText;
 
     [SerializeField, Required]
     private TextMeshProUGUI descriptionText;
+
+    [Title("Audio")]
+    [SerializeField]
+    private AudioSource typingAudioSource;
 
     [Title("Settings")]
     [SerializeField, Range(0.01f, 0.1f), SuffixLabel("seconds per character")]
@@ -36,6 +39,16 @@ public class ItemInspector : MonoBehaviour
     void Awake()
     {
         if (inspectorCanvasGroup == null) inspectorCanvasGroup = GetComponent<CanvasGroup>();
+        // Auto-find the AudioSource if it's on the same object
+        if (typingAudioSource == null) typingAudioSource = GetComponent<AudioSource>();
+
+        // Ensure it's set to LOOP so it plays continuously while typing
+        if (typingAudioSource != null)
+        {
+            typingAudioSource.loop = true;
+            typingAudioSource.Stop(); // Ensure it's not playing at start
+        }
+
         CloseInspector();
     }
 
@@ -62,25 +75,21 @@ public class ItemInspector : MonoBehaviour
 
         Debug.Log($"[ItemInspector] Inspecting item: {data.itemName}");
 
-        // Set image
         inspectedItemImage.sprite = data.itemSprite;
         inspectedItemImage.preserveAspect = true;
 
-        // Set title
-        if (titleText != null)
-        {
-            titleText.text = data.itemName;
-        }
+        if (titleText != null) titleText.text = data.itemName;
 
-        // Show panel
         inspectorCanvasGroup.alpha = 1;
         inspectorCanvasGroup.interactable = true;
         inspectorCanvasGroup.blocksRaycasts = true;
         IsInspecting = true;
         canClose = false;
 
-        // Handle description text
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+
+        // Ensure audio is stopped before starting new inspection
+        if (typingAudioSource != null) typingAudioSource.Stop();
 
         if (seenItems.Contains(data.itemName))
         {
@@ -103,6 +112,11 @@ public class ItemInspector : MonoBehaviour
         IsInspecting = false;
         canClose = false;
 
+        // Stop audio immediately when closing
+        if (typingAudioSource != null) typingAudioSource.Stop();
+
+        if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+
         if (inspectedItemImage != null) inspectedItemImage.sprite = null;
         if (titleText != null) titleText.text = "";
         if (descriptionText != null) descriptionText.text = "";
@@ -112,6 +126,9 @@ public class ItemInspector : MonoBehaviour
     {
         if (descriptionText == null) yield break;
 
+        // START PLAYING AUDIO
+        if (typingAudioSource != null) typingAudioSource.Play();
+
         descriptionText.text = "";
         foreach (char letter in textToType.ToCharArray())
         {
@@ -119,5 +136,8 @@ public class ItemInspector : MonoBehaviour
             descriptionText.text += letter;
             yield return new WaitForSeconds(typewriterSpeed);
         }
+
+        // STOP PLAYING AUDIO WHEN DONE
+        if (typingAudioSource != null) typingAudioSource.Stop();
     }
 }

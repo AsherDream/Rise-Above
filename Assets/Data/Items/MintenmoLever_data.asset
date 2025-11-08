@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: MintenmoLever_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
   itemSprite: {fileID: 0}
-  itemName: Water Bottle
-  itemDescription: Life juice. Stay hydrated or stay dead. Don't waste a single drop
+  itemName: Mintenmo Lever
+  itemDescription: Full of nostalgia, but it breaks faster than you think. Play gently!
