@@ -1,39 +1,41 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using Sirenix.OdinInspector; // UPDATED: Added Odin
+using Sirenix.OdinInspector;
 
-// UPDATED: Added IPointerEnterHandler and IPointerExitHandler for hover
 [RequireComponent(typeof(RectTransform))]
 [RequireComponent(typeof(CanvasGroup))]
 public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    [Title("Item Properties")] // UPDATED
+    [Title("Item Data")]
+    [Required, InlineEditor]
+    public InspectableItemData itemData;
+
+    [Title("Components")]
     [Tooltip("Assign the main Image component of this item.")]
     public Image itemImage;
 
-    // UPDATED: Added a new color field for hovering
+    [Title("Item Properties")]
     [Tooltip("The color the item will tint to when hovering over it.")]
-    public Color hoverColor = new Color(1, 1, 0.8f, 1); // A light yellow
+    public Color hoverColor = new Color(1, 1, 0.8f, 1);
 
     [Tooltip("The color the item will tint to when hovering over a valid drop zone.")]
     public Color validDropColor = Color.yellow;
 
-    [Title("State (Read-Only)")] // UPDATED
-    [ReadOnly] // UPDATED
+    [Title("State (Read-Only)")]
+    [ReadOnly]
     public Color originalColor { get; private set; }
 
-    [ReadOnly] // UPDATED
+    [ReadOnly]
     public bool isDropSuccessful { get; set; }
 
-    // --- Private variables ---
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
     private Canvas rootCanvas;
     private Vector2 startPosition;
     private Transform startParent;
     private ItemInspector itemInspector;
-    private bool isHovering = false; // UPDATED: State to track hovering
+    // Removed the unused 'isHovering' variable to fix the warning
 
     private void Awake()
     {
@@ -49,44 +51,35 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         itemInspector = FindFirstObjectByType<ItemInspector>();
         if (itemInspector == null)
         {
-            // UPDATED: Improved log message
-            Debug.LogError($"[DraggableItem] Could not find ItemInspector in scene on {gameObject.name}! Inspect mechanic will not work.", this);
+            Debug.LogError($"[DraggableItem] Could not find ItemInspector in scene on {gameObject.name}!", this);
+        }
+
+        if (itemImage != null && itemData != null && itemImage.sprite == null)
+        {
+            itemImage.sprite = itemData.itemSprite;
         }
     }
 
-    // --- UPDATED: NEW HOVER METHODS ---
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (ItemInspector.IsInspecting) return; // Don't hover if inspecting
-
-        isHovering = true;
+        if (ItemInspector.IsInspecting) return;
         itemImage.color = hoverColor;
-        Debug.Log($"[DraggableItem] Hover ENTER on {gameObject.name}.", this);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        isHovering = false;
-        if (ItemInspector.IsInspecting) return; // Don't reset color if we just clicked inspect
-
+        if (ItemInspector.IsInspecting) return;
         itemImage.color = originalColor;
-        Debug.Log($"[DraggableItem] Hover EXIT on {gameObject.name}.", this);
     }
-    // --- END NEW HOVER METHODS ---
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        // Check for Right Mouse Button
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            // UPDATED: Added debug log
-            Debug.Log($"[DraggableItem] Right-click detected on {gameObject.name}.", this);
-            if (itemInspector != null)
+            if (itemInspector != null && itemData != null)
             {
-                itemInspector.InspectItem(itemImage.sprite);
-                Debug.Log($"[DraggableItem] Inspect panel opened via {gameObject.name}.", this);
-                isHovering = false; // Stop hovering
-                itemImage.color = originalColor; // Reset color
+                itemInspector.InspectItem(itemData);
+                itemImage.color = originalColor;
             }
         }
     }
@@ -96,10 +89,7 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         if (ItemInspector.IsInspecting) return;
         if (eventData.button == PointerEventData.InputButton.Right) return;
 
-        Debug.Log($"[DraggableItem] Begin DRAG on {gameObject.name}.", this);
-        isHovering = false; // Stop hovering
-        itemImage.color = originalColor; // Ensure it's not the hover color
-
+        itemImage.color = originalColor;
         startPosition = rectTransform.anchoredPosition;
         startParent = transform.parent;
         isDropSuccessful = false;
@@ -128,22 +118,16 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
 
         if (isDropSuccessful)
         {
-            // UPDATED: Added debug log
-            Debug.Log($"[DraggableItem] End DRAG on {gameObject.name} - SUCCESSFUL.", this);
             Destroy(gameObject);
         }
         else
         {
-            // UPDATED: Added debug log
-            Debug.Log($"[DraggableItem] End DRAG on {gameObject.name} - FAILED (snapping back).", this);
             transform.SetParent(startParent);
             rectTransform.anchoredPosition = startPosition;
             ResetToDefaultColor();
         }
     }
 
-    // --- Public methods for the DropZone to call ---
-    // This is for hovering over the DROP ZONE
     public void SetHoverState(bool isValidDrop)
     {
         if (itemImage != null)
@@ -160,4 +144,3 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         }
     }
 }
-
