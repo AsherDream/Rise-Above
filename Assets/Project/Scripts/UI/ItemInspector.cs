@@ -14,6 +14,10 @@ public class ItemInspector : MonoBehaviour
     [SerializeField, Required]
     private CanvasGroup inspectorCanvasGroup;
 
+    // NEW: Reference for the Title Text
+    [SerializeField, Required]
+    private TextMeshProUGUI titleText;
+
     [SerializeField, Required]
     private TextMeshProUGUI descriptionText;
 
@@ -27,7 +31,6 @@ public class ItemInspector : MonoBehaviour
 
     private bool canClose = false;
     private Coroutine typingCoroutine;
-    // HashSet to remember which items we've already seen
     private HashSet<string> seenItems = new HashSet<string>();
 
     void Awake()
@@ -47,6 +50,7 @@ public class ItemInspector : MonoBehaviour
             }
             if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
             {
+                Debug.Log("[ItemInspector] Close input detected. Closing inspector.");
                 CloseInspector();
             }
         }
@@ -56,24 +60,36 @@ public class ItemInspector : MonoBehaviour
     {
         if (data == null || data.itemSprite == null) return;
 
+        Debug.Log($"[ItemInspector] Inspecting item: {data.itemName}");
+
+        // Set image
         inspectedItemImage.sprite = data.itemSprite;
         inspectedItemImage.preserveAspect = true;
 
+        // Set title
+        if (titleText != null)
+        {
+            titleText.text = data.itemName;
+        }
+
+        // Show panel
         inspectorCanvasGroup.alpha = 1;
         inspectorCanvasGroup.interactable = true;
         inspectorCanvasGroup.blocksRaycasts = true;
         IsInspecting = true;
         canClose = false;
 
+        // Handle description text
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
 
-        // Check if we've seen this item before
         if (seenItems.Contains(data.itemName))
         {
+            Debug.Log($"[ItemInspector] Item '{data.itemName}' seen before. Showing full text.");
             descriptionText.text = data.itemDescription;
         }
         else
         {
+            Debug.Log($"[ItemInspector] First time seeing '{data.itemName}'. Starting typewriter effect.");
             typingCoroutine = StartCoroutine(TypeText(data.itemDescription));
             seenItems.Add(data.itemName);
         }
@@ -88,14 +104,18 @@ public class ItemInspector : MonoBehaviour
         canClose = false;
 
         if (inspectedItemImage != null) inspectedItemImage.sprite = null;
+        if (titleText != null) titleText.text = "";
         if (descriptionText != null) descriptionText.text = "";
     }
 
     IEnumerator TypeText(string textToType)
     {
+        if (descriptionText == null) yield break;
+
         descriptionText.text = "";
         foreach (char letter in textToType.ToCharArray())
         {
+            if (descriptionText == null) yield break;
             descriptionText.text += letter;
             yield return new WaitForSeconds(typewriterSpeed);
         }
