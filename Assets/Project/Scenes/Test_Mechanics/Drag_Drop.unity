@@ -893,8 +893,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Item Description will appear Here
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e9d598ad0dedec54c95ab9863490220e, type: 2}
+  m_sharedMaterial: {fileID: 5380704614269332382, guid: e9d598ad0dedec54c95ab9863490220e, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1338,8 +1338,7 @@ MonoBehaviour:
   titleText: {fileID: 1856950157}
   descriptionText: {fileID: 688286224}
   typingAudioSource: {fileID: 796307233}
-  varyPitch: 1
-  typewriterSpeed: 0.1
+  typewriterSpeed: 0.05
 --- !u!225 &796307230
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1401,7 +1400,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 2a44e72181d6796419c3c0df9d292916, type: 3}
+  m_Resource: {fileID: 8300000, guid: 9da126bd4c429f845a707fad91ba661b, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -2864,8 +2863,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9bc36425a47ccfb4586c4b698dec0d90, type: 2}
+  m_sharedMaterial: {fileID: -1218659236319181516, guid: 9bc36425a47ccfb4586c4b698dec0d90, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
