@@ -10,12 +10,25 @@ public class DialogueManager : MonoBehaviour
 
     [Title("UI References")]
     [Required] public GameObject dialoguePanel;
+    [Required] public Image sisterPortraitImage;
     [Required] public TextMeshProUGUI speakerNameText;
     [Required] public TextMeshProUGUI dialogueText;
-    [Required] public Transform choicesContainer;
-    [Required] public GameObject choiceButtonPrefab;
+
+    // REMOVED: ChoicesContainer and ChoiceButtonPrefab
+
+    [Title("Mood Configuration")]
+    [InfoBox("Assign the sprite for each mood here")]
+    public List<MoodMapping> moodSprites;
 
     private DialogueNode currentNode;
+    private Coroutine autoCloseCoroutine; // To close dialogue automatically
+
+    [System.Serializable]
+    public struct MoodMapping
+    {
+        public SisterMood mood;
+        public Sprite sprite;
+    }
 
     private void Awake()
     {
@@ -25,11 +38,18 @@ public class DialogueManager : MonoBehaviour
         if (dialoguePanel != null) dialoguePanel.SetActive(false);
     }
 
-    public void StartDialogue(DialogueNode startNode)
+    public void StartDialogue(DialogueNode startNode, float duration = 3f)
     {
         if (startNode == null) return;
+
+        // Stop any pending close timer
+        if (autoCloseCoroutine != null) StopCoroutine(autoCloseCoroutine);
+
         dialoguePanel.SetActive(true);
         DisplayNode(startNode);
+
+        // Automatically close after a few seconds
+        autoCloseCoroutine = StartCoroutine(AutoCloseDialogue(duration));
     }
 
     private void DisplayNode(DialogueNode node)
@@ -38,46 +58,30 @@ public class DialogueManager : MonoBehaviour
         speakerNameText.text = node.speakerName;
         dialogueText.text = node.dialogueText;
 
-        // Clear old choices
-        foreach (Transform child in choicesContainer) Destroy(child.gameObject);
-
-        // Create new choices
-        if (node.choices.Count > 0)
-        {
-            foreach (DialogueChoice choice in node.choices)
-            {
-                CreateChoiceButton(choice.choiceText, choice.nextNode);
-            }
-        }
-        else if (node.nextNode != null)
-        {
-            CreateChoiceButton("Continue...", node.nextNode);
-        }
-        else if (node.isEndNode)
-        {
-            CreateChoiceButton("End", null);
-        }
+        UpdatePortrait(node.mood);
     }
 
-    private void CreateChoiceButton(string text, DialogueNode nextNode)
+    private void UpdatePortrait(SisterMood mood)
     {
-        GameObject buttonObj = Instantiate(choiceButtonPrefab, choicesContainer);
-        buttonObj.GetComponentInChildren<TextMeshProUGUI>().text = text;
-
-        Button button = buttonObj.GetComponent<Button>();
-        button.onClick.AddListener(() => OnChoiceSelected(nextNode));
-    }
-
-    private void OnChoiceSelected(DialogueNode nextNode)
-    {
-        if (nextNode != null) DisplayNode(nextNode);
-        else EndDialogue();
+        MoodMapping mapping = moodSprites.Find(x => x.mood == mood);
+        if (mapping.sprite != null)
+        {
+            sisterPortraitImage.sprite = mapping.sprite;
+        }
     }
 
     public void EndDialogue()
     {
         dialoguePanel.SetActive(false);
         currentNode = null;
-        Debug.Log("Dialogue Ended");
+
+        // --- NEW: Reset Sister to Normal Mood ---
+        UpdatePortrait(SisterMood.Normal);
+    }
+
+    private System.Collections.IEnumerator AutoCloseDialogue(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        EndDialogue();
     }
 }

@@ -14,4 +14,8 @@ public class InspectableItemData : ScriptableObject
 
     [TextArea(5, 20)]
     public string itemDescription = "Enter item description here...";
+
+    [Title("Sister's Feedback")]
+    [Tooltip("The specific dialogue node to play when this item is dropped in the cart.")]
+    public DialogueNode sisterReaction;
 }

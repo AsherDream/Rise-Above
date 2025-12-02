@@ -16,3 +16,4 @@ MonoBehaviour:
   itemName: Canned Fish
   itemDescription: A standard ration found in most shelters. High in protein, low
     in taste.
+  sisterReaction: {fileID: 11400000, guid: 57a039f9925af354ab01be5c1bbb4ab5, type: 2}

@@ -2,15 +2,30 @@ using UnityEngine;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 
+// Define the moods available
+public enum SisterMood
+{
+    Normal,
+    Happy,
+    Frown,
+    Confused,
+    Complain,
+    Suggestion
+}
+
 [CreateAssetMenu(fileName = "New Dialogue", menuName = "Dialogue/New Node")]
 public class DialogueNode : ScriptableObject
 {
+    [Title("Visuals")]
+    [EnumToggleButtons] // Odin attribute for nice buttons
+    public SisterMood mood = SisterMood.Normal;
+
     [Title("Dialogue Content")]
     [TextArea(3, 10)]
     public string dialogueText;
 
     [Tooltip("Name of the character speaking")]
-    public string speakerName;
+    public string speakerName = "Sister"; // Default to Sister
 
     [Title("Next Steps")]
     [Tooltip("If true, this is the end of the conversation.")]
