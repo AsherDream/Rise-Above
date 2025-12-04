@@ -7,17 +7,13 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Image))]
 public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    // REMOVED: Generic Good/Bad reaction variables
-    // [Title("Dialogue Reactions")]
-    // [Required] public DialogueNode goodItemReaction;
-    // [Required] public DialogueNode badItemReaction;
+    [Title("Dialogue Reactions")]
+    [Required] public DialogueNode goodItemReaction;
+    [Required] public DialogueNode badItemReaction;
 
     [Title("Shopping Cart Logic")]
-    [Required(ErrorMessage = "Assign the RectTransform that will hold the piled items.")]
-    public RectTransform cartContentParent;
-
-    [Required(ErrorMessage = "Assign the prefab for items added to the cart.")]
-    public GameObject cartItemPrefab;
+    [Required] public RectTransform cartContentParent;
+    [Required] public GameObject cartItemPrefab;
 
     [Title("Cart Capacity")]
     public int maxCartCapacity = 9;
@@ -107,6 +103,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             draggable.isDropSuccessful = true;
             PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor);
 
+            // Trigger all logic (Dialogue + Survival Meter)
             RunItemLogic(draggable);
 
             itemsInCartCount++;
@@ -117,14 +114,18 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
     private void PlaceItemInPile(Sprite itemSprite, Color itemColor)
     {
-        // (This function stays exactly the same as before - heavily abbreviated here for brevity)
-        if (cartContentParent == null || leftBorder == null || rightBorder == null || bottomBorder == null || cartItemPrefab == null) return;
+        if (cartContentParent == null || leftBorder == null || rightBorder == null || bottomBorder == null || cartItemPrefab == null)
+            return;
 
         GameObject newItemGO = Instantiate(cartItemPrefab, cartContentParent);
         Image newItemImage = newItemGO.GetComponent<Image>();
         RectTransform itemRect = newItemGO.GetComponent<RectTransform>();
 
-        if (newItemImage == null || itemRect == null) { Destroy(newItemGO); return; }
+        if (newItemImage == null || itemRect == null)
+        {
+            Destroy(newItemGO);
+            return;
+        }
 
         newItemImage.sprite = itemSprite;
         newItemImage.color = itemColor;
@@ -157,30 +158,36 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         itemRect.anchoredPosition = clampedPos;
     }
 
-    // --- Game Logic Hook with Specific Item Dialogue ---
+    // --- MAIN LOGIC HUB ---
     private void RunItemLogic(DraggableItem draggable)
     {
-        // Check if the item has specific data attached
-        if (draggable.itemData != null && draggable.itemData.sisterReaction != null)
-        {
-            // If it has a specific reaction, play it!
-            Debug.Log($"Playing specific reaction for {draggable.itemData.itemName}");
-            DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
-        }
-        else
-        {
-            // Fallback: If no specific reaction is set, maybe play a generic one or nothing
-            Debug.Log($"Item {draggable.name} has no specific Sister Reaction set.");
-        }
-
-        // You can still keep score logic here if you want
+        // 1. Check for GOOD Item (Healing)
         if (draggable.CompareTag("Good_Item"))
         {
-            // Add points
+            // Dialogue
+            if (goodItemReaction != null && DialogueManager.Instance != null)
+                DialogueManager.Instance.StartDialogue(goodItemReaction);
+
+            // Survival Meter
+            if (SurvivalMeter.Instance != null)
+                SurvivalMeter.Instance.OnGoodItemClick();
         }
+        // 2. Check for BAD Item (Damage)
         else if (draggable.CompareTag("Bad_Item"))
         {
-            // Subtract points
+            // Dialogue
+            if (badItemReaction != null && DialogueManager.Instance != null)
+                DialogueManager.Instance.StartDialogue(badItemReaction);
+
+            // Survival Meter
+            if (SurvivalMeter.Instance != null)
+                SurvivalMeter.Instance.OnBadItemClick();
+        }
+
+        // 3. Specific Item Dialogue (Optional override)
+        if (draggable.itemData != null && draggable.itemData.sisterReaction != null)
+        {
+            DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
         }
     }
 }
