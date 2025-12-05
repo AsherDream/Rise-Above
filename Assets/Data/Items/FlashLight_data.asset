@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Flash Light
   itemDescription: Beats stumbling in the dark. Check the batteries, then check them
     again.
+  itemType: 0
+  impactValue: 12
+  sisterReaction: {fileID: 0}

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Rendering; // <-- NEW: Required for Volume
 using Sirenix.OdinInspector;
 
 public class PanelManager : MonoBehaviour
@@ -17,7 +18,11 @@ public class PanelManager : MonoBehaviour
     // --- NEW REFERENCES ---
     private Canvas rootCanvas;
     private GraphicRaycaster rootRaycaster;
-    private Camera rootCamera; // <-- ADD THIS
+    private Camera rootCamera;
+
+    [Title("Effects")]
+    [Tooltip("The Global Volume that contains the Depth of Field / Blur effect.")]
+    public Volume pauseVolume; // <-- NEW: Drag your Global Volume here
 
     [Title("State (Read-Only)")]
     [ReadOnly] public string currentPanel = "None";
@@ -37,7 +42,7 @@ public class PanelManager : MonoBehaviour
         {
             rootCanvas = uiRoot.GetComponentInChildren<Canvas>(true);
             rootRaycaster = uiRoot.GetComponentInChildren<GraphicRaycaster>(true);
-            rootCamera = uiRoot.GetComponentInChildren<Camera>(true); // <-- ADD THIS
+            rootCamera = uiRoot.GetComponentInChildren<Camera>(true);
 
             if (rootCanvas == null) Debug.LogError("[PanelManager] No Canvas found on UIRoot!");
             if (rootRaycaster == null) Debug.LogError("[PanelManager] No GraphicRaycaster found!");
@@ -46,7 +51,10 @@ public class PanelManager : MonoBehaviour
             // Force the canvas AND camera to be disabled on start.
             if (rootCanvas != null) rootCanvas.enabled = false;
             if (rootRaycaster != null) rootRaycaster.enabled = false;
-            if (rootCamera != null) rootCamera.enabled = false; // <-- ADD THIS
+            if (rootCamera != null) rootCamera.enabled = false;
+
+            // Ensure blur is off at start
+            if (pauseVolume != null) pauseVolume.weight = 0; // <-- NEW
 
             Debug.Log("[PanelManager] Canvas and Camera hidden on Start().");
         }
@@ -71,7 +79,7 @@ public class PanelManager : MonoBehaviour
             {
                 rootCanvas = uiRoot.GetComponentInChildren<Canvas>(true);
                 rootRaycaster = uiRoot.GetComponentInChildren<GraphicRaycaster>(true);
-                rootCamera = uiRoot.GetComponentInChildren<Camera>(true); // <-- ADD THIS
+                rootCamera = uiRoot.GetComponentInChildren<Camera>(true);
             }
         }
 
@@ -105,7 +113,10 @@ public class PanelManager : MonoBehaviour
 
             rootCanvas.enabled = false;
             rootRaycaster.enabled = false;
-            rootCamera.enabled = false; // <-- ADD THIS
+            rootCamera.enabled = false;
+
+            // Disable Blur
+            if (pauseVolume != null) pauseVolume.weight = 0; // <-- NEW
 
             Time.timeScale = 1f;
             currentPanel = "None";
@@ -117,7 +128,10 @@ public class PanelManager : MonoBehaviour
 
             rootCanvas.enabled = true;
             rootRaycaster.enabled = true;
-            rootCamera.enabled = true; // <-- ADD THIS
+            rootCamera.enabled = true;
+
+            // Enable Blur
+            if (pauseVolume != null) pauseVolume.weight = 1; // <-- NEW
 
             ShowPanel(pauseMenu);
             Time.timeScale = 0f;
@@ -153,7 +167,6 @@ public class PanelManager : MonoBehaviour
         ShowPanel(settingsPanel);
     }
 
-    // --- TYPO FIX HERE ---
     [BoxGroup("Pause Menu Buttons")]
     [Button]
     public void OnSaveAndLoad()
@@ -168,10 +181,11 @@ public class PanelManager : MonoBehaviour
     {
         Debug.Log("Return to Main Menu pressed");
         Time.timeScale = 1f;
+        // Turn off blur before leaving
+        if (pauseVolume != null) pauseVolume.weight = 0; // <-- NEW
         SceneManager.LoadScene("MainMenu");
     }
 
-    // --- TYPO FIX HERE ---
     [BoxGroup("Exit Panel Buttons")]
     [Button]
     public void OnExitPressed()
@@ -200,4 +214,3 @@ public class PanelManager : MonoBehaviour
         ShowPanel(pauseMenu); // Go back to the pause menu
     }
 }
-

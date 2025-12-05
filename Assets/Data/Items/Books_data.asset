@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Books
   itemDescription: Knowledge is power. Or at least a good way to pass time without
     wasting batteries.
+  itemType: 1
+  impactValue: 10
+  sisterReaction: {fileID: 0}

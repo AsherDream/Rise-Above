@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: First AId Kit
   itemDescription: For cuts, scrapes, and bad decisions. Better to have it and not
     need it.
+  itemType: 0
+  impactValue: 15
+  sisterReaction: {fileID: 0}

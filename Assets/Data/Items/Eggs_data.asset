@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Eggs
   itemDescription: Fragile protein bombs. Great if you can cook them, messy if you
     trip.
+  itemType: 2
+  impactValue: 10
+  sisterReaction: {fileID: 0}

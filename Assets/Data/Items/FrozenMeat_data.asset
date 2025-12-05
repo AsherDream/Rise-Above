@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Frozen Meat
   itemDescription: Mystery meat from the freezer. Is it still good? Only one way
     to find out...
+  itemType: 2
+  impactValue: 15
+  sisterReaction: {fileID: 0}

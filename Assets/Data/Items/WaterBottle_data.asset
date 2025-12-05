@@ -15,4 +15,6 @@ MonoBehaviour:
   itemSprite: {fileID: 4994411350119934954, guid: 87fdbd2ef9ccbe34c83f8e6be4abb7a4, type: 3}
   itemName: Water Bottle
   itemDescription: Life juice. Stay hydrated or stay dead. Don't waste a single drop
+  itemType: 0
+  impactValue: 15
   sisterReaction: {fileID: 0}

@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Candies
   itemDescription: A quick sugar rush for low morale. Good for trading, bad for your
     teeth
+  itemType: 2
+  impactValue: 5
+  sisterReaction: {fileID: 0}

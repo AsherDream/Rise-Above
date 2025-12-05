@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Milk
   itemDescription: Calcium for strong bones! Drink it fast before it turns into chunky
     yogurt.
+  itemType: 2
+  impactValue: 15
+  sisterReaction: {fileID: 0}

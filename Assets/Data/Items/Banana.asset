@@ -10,9 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
-  m_Name: Fruits_data
+  m_Name: Banana
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: -9182177788924653191, guid: 9aba9de69bf30fd48bf4b52287ac9562, type: 3}
   itemName: Fruits
   itemDescription: Nature's candy. Full of vitamins, but they rot faster than you
     think. Eat quickly!
+  itemType: 2
+  impactValue: 8
+  sisterReaction: {fileID: 0}

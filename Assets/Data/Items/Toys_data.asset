@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Toys
   itemDescription: A reminder of simpler times. Useless for survival, but good for
     the soul.
+  itemType: 1
+  impactValue: 5
+  sisterReaction: {fileID: 0}

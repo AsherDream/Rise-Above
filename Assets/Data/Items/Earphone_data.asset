@@ -12,7 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Earphone_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: 3554039551195631401, guid: 83a5a8b58752625458a622e3d43d8067, type: 3}
   itemName: Earphone
   itemDescription: Block out the scary noises with tunes. Just make sure you can
     still hear danger coming!
+  itemType: 1
+  impactValue: 8
+  sisterReaction: {fileID: 0}

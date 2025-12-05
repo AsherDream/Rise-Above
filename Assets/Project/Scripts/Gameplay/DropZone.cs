@@ -7,9 +7,9 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Image))]
 public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    [Title("Dialogue Reactions")]
-    [Required] public DialogueNode goodItemReaction;
-    [Required] public DialogueNode badItemReaction;
+    // We remove the generic reaction nodes because reactions are now specific to items
+    // [Title("Dialogue Reactions")]
+    // [Required] public DialogueNode goodItemReaction; ...
 
     [Title("Shopping Cart Logic")]
     [Required] public RectTransform cartContentParent;
@@ -28,7 +28,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     public float positionJitter = 30f;
     public float rotationJitter = 45f;
 
-    // --- Private Piling State ---
     private DraggableItem currentlyHoveringItem = null;
     private int itemsInCartCount = 0;
     private float currentPileX;
@@ -53,8 +52,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         }
     }
 
-    // --- Interface Implementations ---
-
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (eventData.pointerDrag == null) return;
@@ -64,11 +61,11 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         {
             currentlyHoveringItem = draggable;
             bool isCartFull = itemsInCartCount >= maxCartCapacity;
+            if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
 
             if (isCartFull)
             {
-                if (draggable.itemImage != null)
-                    draggable.itemImage.color = cartFullColor;
+                if (draggable.itemImage != null) draggable.itemImage.color = cartFullColor;
             }
             else
             {
@@ -88,9 +85,12 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
     public void OnDrop(PointerEventData eventData)
     {
-        if (itemsInCartCount >= maxCartCapacity)
+        bool isCartFull = itemsInCartCount >= maxCartCapacity;
+        if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
+
+        if (isCartFull)
         {
-            Debug.Log("Cart is full! Item rejected.");
+            Debug.Log("[DropZone] Cart is full! Item rejected.");
             if (currentlyHoveringItem) currentlyHoveringItem.ResetToDefaultColor();
             currentlyHoveringItem = null;
             return;
@@ -103,10 +103,15 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             draggable.isDropSuccessful = true;
             PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor);
 
-            // Trigger all logic (Dialogue + Survival Meter)
+            // --- NEW: Run logic based on Data Type ---
             RunItemLogic(draggable);
 
             itemsInCartCount++;
+
+            if (Scene1Manager.Instance != null)
+            {
+                Scene1Manager.Instance.OnItemCollected();
+            }
         }
 
         currentlyHoveringItem = null;
@@ -114,18 +119,14 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
     private void PlaceItemInPile(Sprite itemSprite, Color itemColor)
     {
-        if (cartContentParent == null || leftBorder == null || rightBorder == null || bottomBorder == null || cartItemPrefab == null)
-            return;
+        // (This piling visual code remains identical to previous versions)
+        if (cartContentParent == null || cartItemPrefab == null) return;
 
         GameObject newItemGO = Instantiate(cartItemPrefab, cartContentParent);
         Image newItemImage = newItemGO.GetComponent<Image>();
         RectTransform itemRect = newItemGO.GetComponent<RectTransform>();
 
-        if (newItemImage == null || itemRect == null)
-        {
-            Destroy(newItemGO);
-            return;
-        }
+        if (newItemImage == null || itemRect == null) { Destroy(newItemGO); return; }
 
         newItemImage.sprite = itemSprite;
         newItemImage.color = itemColor;
@@ -151,43 +152,42 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         itemRect.localRotation = Quaternion.Euler(0, 0, randomRotation);
 
         currentPileX += itemWidth;
-
         Vector2 clampedPos = itemRect.anchoredPosition;
         float halfWidth = itemWidth / 2f;
         clampedPos.x = Mathf.Clamp(clampedPos.x, leftBorder.anchoredPosition.x + halfWidth, rightBorder.anchoredPosition.x - halfWidth);
         itemRect.anchoredPosition = clampedPos;
     }
 
-    // --- MAIN LOGIC HUB ---
+    // --- NEW LOGIC: DATA DRIVEN ---
     private void RunItemLogic(DraggableItem draggable)
     {
-        // 1. Check for GOOD Item (Healing)
-        if (draggable.CompareTag("Good_Item"))
+        if (draggable.itemData == null)
         {
-            // Dialogue
-            if (goodItemReaction != null && DialogueManager.Instance != null)
-                DialogueManager.Instance.StartDialogue(goodItemReaction);
-
-            // Survival Meter
-            if (SurvivalMeter.Instance != null)
-                SurvivalMeter.Instance.OnGoodItemClick();
-        }
-        // 2. Check for BAD Item (Damage)
-        else if (draggable.CompareTag("Bad_Item"))
-        {
-            // Dialogue
-            if (badItemReaction != null && DialogueManager.Instance != null)
-                DialogueManager.Instance.StartDialogue(badItemReaction);
-
-            // Survival Meter
-            if (SurvivalMeter.Instance != null)
-                SurvivalMeter.Instance.OnBadItemClick();
+            Debug.LogError($"Item {draggable.name} has no ItemData assigned!");
+            return;
         }
 
-        // 3. Specific Item Dialogue (Optional override)
-        if (draggable.itemData != null && draggable.itemData.sisterReaction != null)
+        // 1. Play Specific Dialogue
+        if (draggable.itemData.sisterReaction != null)
         {
             DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
+        }
+
+        // 2. Update Meter based on Type
+        if (SurvivalMeter.Instance != null)
+        {
+            switch (draggable.itemData.itemType)
+            {
+                case FloodItemType.Essential:
+                    SurvivalMeter.Instance.HandleEssentialItem(draggable.itemData.impactValue);
+                    break;
+                case FloodItemType.Burden:
+                    SurvivalMeter.Instance.HandleBurdenItem(draggable.itemData.impactValue);
+                    break;
+                case FloodItemType.Wasteful:
+                    SurvivalMeter.Instance.HandleWastefulItem(draggable.itemData.impactValue);
+                    break;
+            }
         }
     }
 }

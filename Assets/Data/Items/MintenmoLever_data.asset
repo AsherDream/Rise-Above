@@ -15,3 +15,6 @@ MonoBehaviour:
   itemSprite: {fileID: 0}
   itemName: Mintenmo Lever
   itemDescription: Full of nostalgia, but it breaks faster than you think. Play gently!
+  itemType: 1
+  impactValue: 15
+  sisterReaction: {fileID: 0}
