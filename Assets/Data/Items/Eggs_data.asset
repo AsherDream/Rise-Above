@@ -18,4 +18,4 @@ MonoBehaviour:
     trip.
   itemType: 2
   impactValue: 10
-  sisterReaction: {fileID: 0}
+  sisterReaction: {fileID: 11400000, guid: 163a82d189a19bf4f9257827c814de8b, type: 2}

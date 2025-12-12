@@ -18,4 +18,4 @@ MonoBehaviour:
     up.
   itemType: 0
   impactValue: 8
-  sisterReaction: {fileID: 0}
+  sisterReaction: {fileID: 11400000, guid: 3fb25aedd898df143bd27d6d2c55a492, type: 2}

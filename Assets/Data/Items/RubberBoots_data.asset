@@ -15,3 +15,6 @@ MonoBehaviour:
   itemSprite: {fileID: 0}
   itemName: Rubber Boots
   itemDescription: Keep your feet dry and happy. Trench foot is not a fun time.
+  itemType: 0
+  impactValue: 10
+  sisterReaction: {fileID: 11400000, guid: f47033c53351bc34b82ce3114201f7e0, type: 2}

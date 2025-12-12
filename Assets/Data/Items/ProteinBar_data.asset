@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Protein Bar
   itemDescription: Dense energy bricks. Tastes like sawdust and chocolate, but it'll
     keep you moving.
+  itemType: 0
+  impactValue: 10
+  sisterReaction: {fileID: 11400000, guid: 7a902a760af892341993511409d87ae4, type: 2}

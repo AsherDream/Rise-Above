@@ -46,7 +46,8 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         if (itemImage == null)
             itemImage = GetComponent<Image>();
 
-        originalColor = itemImage.color;
+        if (itemImage != null)
+            originalColor = itemImage.color;
 
         itemInspector = FindFirstObjectByType<ItemInspector>();
         if (itemInspector == null)
@@ -60,16 +61,51 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         }
     }
 
+    [Button("Force Update Sprite")] // Manual button for editor use
+    public void UpdateSpriteFromData()
+    {
+        if (itemImage != null && itemData != null)
+        {
+            if (itemData.itemSprite != null)
+            {
+                itemImage.sprite = itemData.itemSprite;
+                // Ensure color is white so the sprite shows correctly
+                itemImage.color = Color.white;
+                originalColor = Color.white;
+            }
+            else
+            {
+                Debug.LogWarning($"[DraggableItem] ItemData '{itemData.name}' has no sprite assigned!", this);
+            }
+        }
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (ItemInspector.IsInspecting) return;
-        itemImage.color = hoverColor;
+
+        if (itemImage != null)
+            itemImage.color = hoverColor;
+
+        // --- NEW: Tell Sister ---
+        if (SisterReactionController.Instance != null)
+        {
+            SisterReactionController.Instance.RegisterHoverStart(this);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         if (ItemInspector.IsInspecting) return;
-        itemImage.color = originalColor;
+
+        if (itemImage != null)
+            itemImage.color = originalColor;
+
+        // --- NEW: Tell Sister ---
+        if (SisterReactionController.Instance != null)
+        {
+            SisterReactionController.Instance.RegisterHoverEnd(this);
+        }
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -79,7 +115,7 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
             if (itemInspector != null && itemData != null)
             {
                 itemInspector.InspectItem(itemData);
-                itemImage.color = originalColor;
+                if (itemImage != null) itemImage.color = originalColor;
             }
         }
     }
@@ -89,7 +125,7 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         if (ItemInspector.IsInspecting) return;
         if (eventData.button == PointerEventData.InputButton.Right) return;
 
-        itemImage.color = originalColor;
+        if (itemImage != null) itemImage.color = originalColor;
         startPosition = rectTransform.anchoredPosition;
         startParent = transform.parent;
         isDropSuccessful = false;

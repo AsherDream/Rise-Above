@@ -18,4 +18,4 @@ MonoBehaviour:
     still hear danger coming!
   itemType: 1
   impactValue: 8
-  sisterReaction: {fileID: 0}
+  sisterReaction: {fileID: 11400000, guid: 07a16522a0d349d4683091881d817efa, type: 2}

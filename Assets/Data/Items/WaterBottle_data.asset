@@ -17,4 +17,4 @@ MonoBehaviour:
   itemDescription: Life juice. Stay hydrated or stay dead. Don't waste a single drop
   itemType: 0
   impactValue: 15
-  sisterReaction: {fileID: 0}
+  sisterReaction: {fileID: 11400000, guid: 1cce7900ccd88fb4eba467775dd7d3d6, type: 2}

@@ -10,7 +10,7 @@ public class Scene1Manager : MonoBehaviour
     public static Scene1Manager Instance;
 
     [Title("Level Settings")]
-    public float levelTimeInSeconds = 120f; // 2 Minutes
+    public float levelTimeInSeconds = 120f;
     public int targetItemCount = 9;
 
     [Title("UI References")]
@@ -22,8 +22,9 @@ public class Scene1Manager : MonoBehaviour
     [Required] public TextMeshProUGUI summaryText;
 
     // Internal State
-    private float currentTime;
-    private int currentItems;
+    [Title("Debug Info")]
+    [ReadOnly] public float currentTime;
+    [ReadOnly] public int currentItems;
     private bool isGameActive = true;
 
     private void Awake()
@@ -38,14 +39,11 @@ public class Scene1Manager : MonoBehaviour
         currentItems = 0;
         isGameActive = true;
 
-        // Setup UI State
         gameOverPanel.SetActive(false);
         levelCompletePanel.SetActive(false);
 
-        // Setup Checkout Button (Disabled/Gray initially)
         checkoutButton.interactable = false;
 
-        // Ensure the button has an image component before trying to set its color
         if (checkoutButton.image != null)
         {
             checkoutButton.image.color = Color.gray;
@@ -57,11 +55,8 @@ public class Scene1Manager : MonoBehaviour
     private void Update()
     {
         if (!isGameActive) return;
-
-        // Pause timer while inspecting items
         if (ItemInspector.IsInspecting) return;
 
-        // Timer Logic
         currentTime -= Time.deltaTime;
         UpdateTimerUI();
 
@@ -75,24 +70,15 @@ public class Scene1Manager : MonoBehaviour
     {
         if (timerText != null)
         {
-            // Format time as minutes:seconds
             float minutes = Mathf.FloorToInt(currentTime / 60);
             float seconds = Mathf.FloorToInt(currentTime % 60);
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
 
-            // Optional: Turn red when time is low (e.g., last 30 seconds)
-            if (currentTime <= 30f)
-            {
-                timerText.color = Color.red;
-            }
-            else
-            {
-                timerText.color = Color.white;
-            }
+            if (currentTime <= 30f) timerText.color = Color.red;
+            else timerText.color = Color.white;
         }
     }
 
-    // --- Public Logic called by DropZone ---
     public void OnItemCollected()
     {
         currentItems++;
@@ -104,32 +90,35 @@ public class Scene1Manager : MonoBehaviour
         }
     }
 
-    // --- NEW: This is the missing method! ---
+    // --- FIX: ADDED MISSING METHOD ---
     public bool IsCartFull()
     {
         return currentItems >= targetItemCount;
     }
 
-    // --- Button Logic ---
     private void EnableCheckout()
     {
         Debug.Log("[Scene1Manager] Cart Full! Checkout enabled.");
         checkoutButton.interactable = true;
 
-        // Start "Flashing Red" effect
+        // Immediate visual update
+        if (checkoutButton.image != null) checkoutButton.image.color = Color.red;
+
         StartCoroutine(FlashCheckoutButton());
     }
 
     private IEnumerator FlashCheckoutButton()
     {
-        // Only flash if we have an image component to tint
         if (checkoutButton.image == null) yield break;
+
+        Color redColor = new Color(1f, 0.2f, 0.2f);
+        Color lightRedColor = new Color(1f, 0.6f, 0.6f);
 
         while (isGameActive)
         {
-            checkoutButton.image.color = Color.red;
+            checkoutButton.image.color = redColor;
             yield return new WaitForSeconds(0.5f);
-            checkoutButton.image.color = new Color(1f, 0.5f, 0.5f); // Lighter red
+            checkoutButton.image.color = lightRedColor;
             yield return new WaitForSeconds(0.5f);
         }
     }
@@ -137,19 +126,14 @@ public class Scene1Manager : MonoBehaviour
     public void OnCheckoutClicked()
     {
         if (!isGameActive) return;
-        isGameActive = false; // Stop timer, stop input
+        isGameActive = false;
 
-        // Show Success Screen
         levelCompletePanel.SetActive(true);
 
-        // Calculate Logic for Summary (Simple version)
         if (SurvivalMeter.Instance != null)
         {
             int hp = SurvivalMeter.Instance.currentHP;
-
-            // Calculate days survived (simple formula: 20 HP = 1 Day)
             int daysSurvived = (hp / 20) + 1;
-
             summaryText.text = $"You secured {currentItems} items.\nMorale: {hp}%\n\nBased on your supplies,\nyou can survive for {daysSurvived} days.";
         }
         else
@@ -158,29 +142,40 @@ public class Scene1Manager : MonoBehaviour
         }
     }
 
-    // --- Game Over Logic ---
     public void TriggerGameOver(string reason)
     {
         if (!isGameActive) return;
         isGameActive = false;
 
+        // Trigger Shake via UIShake
+        if (UIShake.Instance != null)
+        {
+            UIShake.Instance.ShakeGameOver();
+        }
+
+        StartCoroutine(GameOverSequence(reason));
+    }
+
+    private IEnumerator GameOverSequence(string reason)
+    {
+        // Wait for shake
+        yield return new WaitForSeconds(1.0f);
+
         gameOverPanel.SetActive(true);
         if (gameOverReasonText != null) gameOverReasonText.text = reason;
 
-        // Optional: Stop time so physics/drag stops
         Time.timeScale = 0f;
     }
 
-    // --- Scene Navigation (Hook these to buttons in Inspector) ---
     public void RetryLevel()
     {
-        Time.timeScale = 1f; // Important: Unpause before reloading
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void ReturnToMenu()
     {
-        Time.timeScale = 1f; // Important: Unpause before loading new scene
+        Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
     }
 }

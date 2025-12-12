@@ -15,3 +15,6 @@ MonoBehaviour:
   itemSprite: {fileID: 0}
   itemName: Bread
   itemDescription: Carbs are life. Good for sandwiches, bad when it gets moldy.
+  itemType: 0
+  impactValue: 10
+  sisterReaction: {fileID: 11400000, guid: 5ddc281a31094c547b80384299294f23, type: 2}

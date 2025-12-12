@@ -18,4 +18,4 @@ MonoBehaviour:
     think. Eat quickly!
   itemType: 2
   impactValue: 8
-  sisterReaction: {fileID: 0}
+  sisterReaction: {fileID: 11400000, guid: 1e3f11b5152532b4aa3ea6d224dd9dc5, type: 2}

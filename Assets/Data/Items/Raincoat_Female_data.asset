@@ -16,3 +16,6 @@ MonoBehaviour:
   itemName: Raincoat_Female
   itemDescription: A shield against the miserable cold. Stay warm, stay dry, and
     keep moving forward.
+  itemType: 0
+  impactValue: 10
+  sisterReaction: {fileID: 11400000, guid: 8fc4e55108d359246bb5d079a74cb8e3, type: 2}

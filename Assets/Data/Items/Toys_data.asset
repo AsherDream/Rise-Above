@@ -18,4 +18,4 @@ MonoBehaviour:
     the soul.
   itemType: 1
   impactValue: 5
-  sisterReaction: {fileID: 0}
+  sisterReaction: {fileID: 11400000, guid: 4ff2de250ed3b5844b68069e2d43eb96, type: 2}

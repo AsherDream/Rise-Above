@@ -18,4 +18,4 @@ MonoBehaviour:
     wasting batteries.
   itemType: 1
   impactValue: 10
-  sisterReaction: {fileID: 0}
+  sisterReaction: {fileID: 11400000, guid: 2848e8b88d068f5488c542d59defe2c2, type: 2}

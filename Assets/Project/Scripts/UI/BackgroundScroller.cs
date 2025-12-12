@@ -12,40 +12,63 @@ public class BackgroundScroller : MonoBehaviour
     [SerializeField] private KeyCode leftKey = KeyCode.A;
     [SerializeField] private KeyCode rightKey = KeyCode.D;
 
+    [Title("Audio")]
+    [SerializeField] private AudioSource cartAudioSource; // Reference to the Audio Source
+
     private RectTransform rect;
 
     void Awake()
     {
         rect = GetComponent<RectTransform>();
+        if (cartAudioSource == null) cartAudioSource = GetComponent<AudioSource>();
     }
 
     void Update()
     {
-        // NEW: If the inspector is open, do not scroll
-        if (ItemInspector.IsInspecting) return;
+        // If the inspector is open, stop moving and stop sound
+        if (ItemInspector.IsInspecting)
+        {
+            if (cartAudioSource != null && cartAudioSource.isPlaying) cartAudioSource.Stop();
+            return;
+        }
 
-        // --- All your existing code stays the same ---
         Vector2 newPosition = rect.anchoredPosition;
+        bool isMoving = false; // Track if we are moving this frame
 
         // Check for 'left' key
         if (Input.GetKey(leftKey))
         {
-            // Move right (to show what's on the left)
             newPosition.x += scrollSpeed * Time.deltaTime;
+            isMoving = true;
         }
 
         // Check for 'right' key
         if (Input.GetKey(rightKey))
         {
-            // Move left (to show what's on the right)
             newPosition.x -= scrollSpeed * Time.deltaTime;
+            isMoving = true;
         }
 
-        // Clamp the position to stay within your boundaries
-        newPosition.x = Mathf.Clamp(newPosition.x, minXPosition, maxXPosition);
+        // Apply movement logic
+        if (isMoving)
+        {
+            // Clamp position
+            newPosition.x = Mathf.Clamp(newPosition.x, minXPosition, maxXPosition);
+            rect.anchoredPosition = newPosition;
 
-        // Apply the new position
-        rect.anchoredPosition = newPosition;
+            // Handle Audio
+            if (cartAudioSource != null && !cartAudioSource.isPlaying)
+            {
+                cartAudioSource.Play();
+            }
+        }
+        else
+        {
+            // Stop Audio if not moving
+            if (cartAudioSource != null && cartAudioSource.isPlaying)
+            {
+                cartAudioSource.Stop();
+            }
+        }
     }
 }
-

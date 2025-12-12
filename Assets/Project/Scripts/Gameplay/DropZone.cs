@@ -3,14 +3,12 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
+using DG.Tweening; // REQUIRED: Make sure you have imported DOTween
 
 [RequireComponent(typeof(Image))]
 public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    // We remove the generic reaction nodes because reactions are now specific to items
-    // [Title("Dialogue Reactions")]
-    // [Required] public DialogueNode goodItemReaction; ...
-
+    // ... (References and Settings - same as before) ...
     [Title("Shopping Cart Logic")]
     [Required] public RectTransform cartContentParent;
     [Required] public GameObject cartItemPrefab;
@@ -33,10 +31,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     private float currentPileX;
     private float currentPileY;
 
-    private void Awake()
-    {
-        InitializePileCursor();
-    }
+    private void Awake() { InitializePileCursor(); }
 
     private void InitializePileCursor()
     {
@@ -45,32 +40,27 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             currentPileX = leftBorder.anchoredPosition.x;
             currentPileY = bottomBorder.anchoredPosition.y;
         }
-        else
-        {
-            currentPileX = 0;
-            currentPileY = 0;
-        }
+        else { currentPileX = 0; currentPileY = 0; }
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (eventData.pointerDrag == null) return;
-
         DraggableItem draggable = eventData.pointerDrag.GetComponent<DraggableItem>();
         if (draggable != null)
         {
             currentlyHoveringItem = draggable;
             bool isCartFull = itemsInCartCount >= maxCartCapacity;
-            if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
 
-            if (isCartFull)
+            // Check Manager logic if available
+            if (Scene1Manager.Instance != null)
             {
-                if (draggable.itemImage != null) draggable.itemImage.color = cartFullColor;
+                // Note: Ensure IsCartFull is added to Scene1Manager (see next script)
+                isCartFull = Scene1Manager.Instance.IsCartFull();
             }
-            else
-            {
-                draggable.SetHoverState(true);
-            }
+
+            if (isCartFull) { if (draggable.itemImage != null) draggable.itemImage.color = cartFullColor; }
+            else { draggable.SetHoverState(true); }
         }
     }
 
@@ -86,13 +76,15 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     public void OnDrop(PointerEventData eventData)
     {
         bool isCartFull = itemsInCartCount >= maxCartCapacity;
-        if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
+        if (Scene1Manager.Instance != null) isCartFull = Scene1Manager.Instance.IsCartFull();
 
         if (isCartFull)
         {
-            Debug.Log("[DropZone] Cart is full! Item rejected.");
             if (currentlyHoveringItem) currentlyHoveringItem.ResetToDefaultColor();
             currentlyHoveringItem = null;
+
+            // JUICE: Shake the cart to say "NO!"
+            transform.DOShakePosition(0.3f, 10f, 20, 90f);
             return;
         }
 
@@ -101,32 +93,37 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         if (draggable != null)
         {
             draggable.isDropSuccessful = true;
-            PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor);
 
-            // --- NEW: Run logic based on Data Type ---
+            // 1. Place the item visually
+            GameObject droppedVisual = PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor);
+
+            // JUICE: Animate the new item landing!
+            if (droppedVisual != null)
+            {
+                droppedVisual.transform.localScale = Vector3.zero;
+                droppedVisual.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBounce);
+            }
+
+            // JUICE: Squash the cart slightly to feel the weight
+            transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1);
+
             RunItemLogic(draggable);
 
             itemsInCartCount++;
 
-            if (Scene1Manager.Instance != null)
-            {
-                Scene1Manager.Instance.OnItemCollected();
-            }
+            if (Scene1Manager.Instance != null) Scene1Manager.Instance.OnItemCollected();
         }
-
         currentlyHoveringItem = null;
     }
 
-    private void PlaceItemInPile(Sprite itemSprite, Color itemColor)
+    private GameObject PlaceItemInPile(Sprite itemSprite, Color itemColor)
     {
-        // (This piling visual code remains identical to previous versions)
-        if (cartContentParent == null || cartItemPrefab == null) return;
-
+        if (cartContentParent == null || cartItemPrefab == null) return null;
         GameObject newItemGO = Instantiate(cartItemPrefab, cartContentParent);
         Image newItemImage = newItemGO.GetComponent<Image>();
         RectTransform itemRect = newItemGO.GetComponent<RectTransform>();
 
-        if (newItemImage == null || itemRect == null) { Destroy(newItemGO); return; }
+        if (newItemImage == null || itemRect == null) { Destroy(newItemGO); return null; }
 
         newItemImage.sprite = itemSprite;
         newItemImage.color = itemColor;
@@ -144,36 +141,28 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         float baseYPos = currentPileY;
         float xJitter = Random.Range(-positionJitter, positionJitter);
         float yJitter = Random.Range(-positionJitter / 2, positionJitter / 2);
-        float finalXPos = baseXPos + xJitter;
-        float finalYPos = baseYPos + yJitter;
 
-        itemRect.anchoredPosition = new Vector2(finalXPos, finalYPos);
-        float randomRotation = Random.Range(-rotationJitter, rotationJitter);
-        itemRect.localRotation = Quaternion.Euler(0, 0, randomRotation);
-
+        itemRect.anchoredPosition = new Vector2(baseXPos + xJitter, baseYPos + yJitter);
+        itemRect.localRotation = Quaternion.Euler(0, 0, Random.Range(-rotationJitter, rotationJitter));
         currentPileX += itemWidth;
+
         Vector2 clampedPos = itemRect.anchoredPosition;
         float halfWidth = itemWidth / 2f;
         clampedPos.x = Mathf.Clamp(clampedPos.x, leftBorder.anchoredPosition.x + halfWidth, rightBorder.anchoredPosition.x - halfWidth);
         itemRect.anchoredPosition = clampedPos;
+
+        return newItemGO; // Return the object so we can animate it
     }
 
-    // --- NEW LOGIC: DATA DRIVEN ---
     private void RunItemLogic(DraggableItem draggable)
     {
-        if (draggable.itemData == null)
-        {
-            Debug.LogError($"Item {draggable.name} has no ItemData assigned!");
-            return;
-        }
+        if (draggable.itemData == null) return;
 
-        // 1. Play Specific Dialogue
         if (draggable.itemData.sisterReaction != null)
         {
             DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
         }
 
-        // 2. Update Meter based on Type
         if (SurvivalMeter.Instance != null)
         {
             switch (draggable.itemData.itemType)
@@ -181,11 +170,15 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                 case FloodItemType.Essential:
                     SurvivalMeter.Instance.HandleEssentialItem(draggable.itemData.impactValue);
                     break;
+
                 case FloodItemType.Burden:
                     SurvivalMeter.Instance.HandleBurdenItem(draggable.itemData.impactValue);
+                    if (UIShake.Instance != null) UIShake.Instance.ShakeBurden();
                     break;
+
                 case FloodItemType.Wasteful:
                     SurvivalMeter.Instance.HandleWastefulItem(draggable.itemData.impactValue);
+                    if (UIShake.Instance != null) UIShake.Instance.ShakeWasteful();
                     break;
             }
         }

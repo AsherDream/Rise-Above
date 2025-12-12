@@ -38,6 +38,11 @@ public class DialogueManager : MonoBehaviour
         if (dialoguePanel != null) dialoguePanel.SetActive(false);
     }
 
+    public void ForcePortrait(SisterMood mood)
+    {
+        UpdatePortrait(mood);
+    }
+
     public void StartDialogue(DialogueNode startNode, float duration = 3f)
     {
         if (startNode == null) return;
