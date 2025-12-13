@@ -10,8 +10,14 @@ public class Scene1Manager : MonoBehaviour
     public static Scene1Manager Instance;
 
     [Title("Level Settings")]
-    public float levelTimeInSeconds = 120f;
+    public float levelTimeInSeconds = 120f; // 2 Minutes
     public int targetItemCount = 9;
+
+    [Title("Timer Beep Settings")]
+    [Tooltip("Time in seconds when the timer starts beeping.")]
+    public float beepStartTime = 10f;
+    [Required] public AudioSource timerAudioSource;
+    public AudioClip beepSound;
 
     [Title("UI References")]
     [Required] public TextMeshProUGUI timerText;
@@ -27,6 +33,10 @@ public class Scene1Manager : MonoBehaviour
     [ReadOnly] public int currentItems;
     private bool isGameActive = true;
 
+    // Store the original color you set in the Inspector
+    private Color defaultTimerColor;
+    private bool hasBeeped = false; // New flag to play sound only once
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -38,16 +48,20 @@ public class Scene1Manager : MonoBehaviour
         currentTime = levelTimeInSeconds;
         currentItems = 0;
         isGameActive = true;
+        hasBeeped = false; // Reset flag
+
+        // Save the color you picked in the editor
+        if (timerText != null)
+        {
+            defaultTimerColor = timerText.color;
+        }
 
         gameOverPanel.SetActive(false);
         levelCompletePanel.SetActive(false);
 
+        // Initial Button State
         checkoutButton.interactable = false;
-
-        if (checkoutButton.image != null)
-        {
-            checkoutButton.image.color = Color.gray;
-        }
+        if (checkoutButton.image != null) checkoutButton.image.color = Color.gray;
 
         checkoutButton.onClick.AddListener(OnCheckoutClicked);
     }
@@ -60,9 +74,24 @@ public class Scene1Manager : MonoBehaviour
         currentTime -= Time.deltaTime;
         UpdateTimerUI();
 
+        // Check for Beep (Only play once)
+        if (currentTime <= beepStartTime && !hasBeeped && currentTime > 0)
+        {
+            PlayTimerBeep();
+        }
+
         if (currentTime <= 0)
         {
             TriggerGameOver("The storm arrived before you finished.");
+        }
+    }
+
+    private void PlayTimerBeep()
+    {
+        hasBeeped = true; // Ensure it only plays once
+        if (timerAudioSource != null && beepSound != null)
+        {
+            timerAudioSource.PlayOneShot(beepSound);
         }
     }
 
@@ -74,8 +103,15 @@ public class Scene1Manager : MonoBehaviour
             float seconds = Mathf.FloorToInt(currentTime % 60);
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
 
-            if (currentTime <= 30f) timerText.color = Color.red;
-            else timerText.color = Color.white;
+            // Turn red only when time is low, otherwise use your custom color
+            if (currentTime <= 30f)
+            {
+                timerText.color = Color.red;
+            }
+            else
+            {
+                timerText.color = defaultTimerColor;
+            }
         }
     }
 
@@ -90,7 +126,6 @@ public class Scene1Manager : MonoBehaviour
         }
     }
 
-    // --- FIX: ADDED MISSING METHOD ---
     public bool IsCartFull()
     {
         return currentItems >= targetItemCount;
@@ -101,8 +136,13 @@ public class Scene1Manager : MonoBehaviour
         Debug.Log("[Scene1Manager] Cart Full! Checkout enabled.");
         checkoutButton.interactable = true;
 
-        // Immediate visual update
         if (checkoutButton.image != null) checkoutButton.image.color = Color.red;
+
+        // Play Alert Sound
+        if (SisterReactionController.Instance != null)
+        {
+            SisterReactionController.Instance.TriggerAlert();
+        }
 
         StartCoroutine(FlashCheckoutButton());
     }
@@ -116,6 +156,8 @@ public class Scene1Manager : MonoBehaviour
 
         while (isGameActive)
         {
+            checkoutButton.interactable = true;
+
             checkoutButton.image.color = redColor;
             yield return new WaitForSeconds(0.5f);
             checkoutButton.image.color = lightRedColor;
@@ -127,6 +169,10 @@ public class Scene1Manager : MonoBehaviour
     {
         if (!isGameActive) return;
         isGameActive = false;
+
+        StopAllCoroutines();
+        // Also stop the beeping sound if checkout happens
+        if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
 
         levelCompletePanel.SetActive(true);
 
@@ -147,18 +193,16 @@ public class Scene1Manager : MonoBehaviour
         if (!isGameActive) return;
         isGameActive = false;
 
-        // Trigger Shake via UIShake
-        if (UIShake.Instance != null)
-        {
-            UIShake.Instance.ShakeGameOver();
-        }
+        // Stop beep sound on game over
+        if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
+
+        if (UIShake.Instance != null) UIShake.Instance.ShakeGameOver();
 
         StartCoroutine(GameOverSequence(reason));
     }
 
     private IEnumerator GameOverSequence(string reason)
     {
-        // Wait for shake
         yield return new WaitForSeconds(1.0f);
 
         gameOverPanel.SetActive(true);

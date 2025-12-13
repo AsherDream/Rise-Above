@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
+using DG.Tweening; // Required for DOTween
 
 [RequireComponent(typeof(RectTransform))]
 [RequireComponent(typeof(CanvasGroup))]
@@ -35,7 +36,7 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
     private Vector2 startPosition;
     private Transform startParent;
     private ItemInspector itemInspector;
-    // Removed the unused 'isHovering' variable to fix the warning
+    private Vector3 originalScale;
 
     private void Awake()
     {
@@ -49,6 +50,8 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         if (itemImage != null)
             originalColor = itemImage.color;
 
+        originalScale = transform.localScale;
+
         itemInspector = FindFirstObjectByType<ItemInspector>();
         if (itemInspector == null)
         {
@@ -61,7 +64,7 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         }
     }
 
-    [Button("Force Update Sprite")] // Manual button for editor use
+    [Button("Force Update Sprite")]
     public void UpdateSpriteFromData()
     {
         if (itemImage != null && itemData != null)
@@ -69,7 +72,6 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
             if (itemData.itemSprite != null)
             {
                 itemImage.sprite = itemData.itemSprite;
-                // Ensure color is white so the sprite shows correctly
                 itemImage.color = Color.white;
                 originalColor = Color.white;
             }
@@ -80,14 +82,17 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         }
     }
 
+    // --- Tweens and Logic ---
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (ItemInspector.IsInspecting) return;
 
-        if (itemImage != null)
-            itemImage.color = hoverColor;
+        if (itemImage != null) itemImage.color = hoverColor;
 
-        // --- NEW: Tell Sister ---
+        // Juice: Scale up
+        transform.DOScale(originalScale * 1.1f, 0.2f).SetEase(Ease.OutBack);
+
         if (SisterReactionController.Instance != null)
         {
             SisterReactionController.Instance.RegisterHoverStart(this);
@@ -98,10 +103,11 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
     {
         if (ItemInspector.IsInspecting) return;
 
-        if (itemImage != null)
-            itemImage.color = originalColor;
+        if (itemImage != null) itemImage.color = originalColor;
 
-        // --- NEW: Tell Sister ---
+        // Juice: Reset Scale
+        transform.DOScale(originalScale, 0.2f).SetEase(Ease.OutQuad);
+
         if (SisterReactionController.Instance != null)
         {
             SisterReactionController.Instance.RegisterHoverEnd(this);
@@ -124,6 +130,10 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
     {
         if (ItemInspector.IsInspecting) return;
         if (eventData.button == PointerEventData.InputButton.Right) return;
+
+        // FIX: Stop all tweens instantly so they don't fight the drag
+        transform.DOKill();
+        transform.localScale = originalScale;
 
         if (itemImage != null) itemImage.color = originalColor;
         startPosition = rectTransform.anchoredPosition;
@@ -154,14 +164,22 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
 
         if (isDropSuccessful)
         {
+            // FIX: Kill tweens before destroying to prevent errors!
+            transform.DOKill();
             Destroy(gameObject);
         }
         else
         {
             transform.SetParent(startParent);
-            rectTransform.anchoredPosition = startPosition;
+            rectTransform.DOAnchorPos(startPosition, 0.3f).SetEase(Ease.OutQuad);
             ResetToDefaultColor();
         }
+    }
+
+    // Safety cleanup just in case
+    private void OnDestroy()
+    {
+        transform.DOKill();
     }
 
     public void SetHoverState(bool isValidDrop)
