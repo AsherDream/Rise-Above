@@ -25,7 +25,7 @@ public class SurvivalMeter : MonoBehaviour
 
     // --- State Variables ---
     [ReadOnly] public int currentHP;
-    [ReadOnly] public int currentMaxHP; // The cap that can shrink
+    [ReadOnly] public int currentMaxHP;
 
     [System.Serializable]
     public struct MeterStage
@@ -42,43 +42,44 @@ public class SurvivalMeter : MonoBehaviour
 
     void Start()
     {
-        // Initialize HP
         currentMaxHP = startingMaxHP;
         currentHP = startingMaxHP;
-
         UpdateUI();
     }
 
-    // --- NEW LOGIC FOR FLOOD TYPES ---
+    // --- NEW LOGIC: CENTRALIZED EFFECTS ---
 
     public void HandleEssentialItem(int value)
     {
         currentHP += value;
-
-        // FIX: Clamp to currentMaxHP, NOT startingMaxHP
         if (currentHP > currentMaxHP) currentHP = currentMaxHP;
 
         UpdateUI();
-        Debug.Log($"<color=green>Essential Item! +{value} HP. Current: {currentHP}/{currentMaxHP}</color>");
+        Debug.Log($"<color=green>Essential Item! +{value} HP.</color>");
+
+        // Positive Feedback
+        if (SisterReactionController.Instance != null)
+            SisterReactionController.Instance.TriggerPositiveSound();
     }
 
     public void HandleBurdenItem(int weightCost)
     {
-        // 1. Reduce the Ceiling (Permanent)
         currentMaxHP -= weightCost;
         if (currentMaxHP < 0) currentMaxHP = 0;
+        currentHP -= weightCost; // Immediate penalty
 
-        // 2. Reduce Current HP (Immediate Penalty)
-        // If we don't do this, adding a burden at 50/100 -> 50/85 feels like "free" healing percentage-wise.
-        // We subtract the weight so the player feels the "heavy" impact immediately.
-        currentHP -= weightCost;
-
-        // 3. Safety Clamps
         if (currentHP > currentMaxHP) currentHP = currentMaxHP;
         if (currentHP < minHP) currentHP = minHP;
 
         UpdateUI();
-        Debug.Log($"<color=yellow>Burden Item! Max Capacity reduced by {weightCost}. New Cap: {currentMaxHP}. Current: {currentHP}</color>");
+        Debug.Log($"<color=yellow>Burden Item! Max Reduced by {weightCost}.</color>");
+
+        // Burden Feedback
+        if (SisterReactionController.Instance != null)
+            SisterReactionController.Instance.TriggerNegativeSound();
+
+        if (UIShake.Instance != null)
+            UIShake.Instance.ShakeBurden();
 
         CheckGameOver();
     }
@@ -89,7 +90,18 @@ public class SurvivalMeter : MonoBehaviour
         if (currentHP < minHP) currentHP = minHP;
 
         UpdateUI();
-        Debug.Log($"<color=red>Wasteful Item! -{damage} HP. Current: {currentHP}/{currentMaxHP}</color>");
+        Debug.Log($"<color=red>Wasteful Item! -{damage} HP.</color>");
+
+        // Wasteful Feedback
+        if (SisterReactionController.Instance != null)
+            SisterReactionController.Instance.TriggerNegativeSound();
+
+        if (UIShake.Instance != null)
+            UIShake.Instance.ShakeWasteful();
+
+        // --- TRIGGER LIGHT FLICKER ---
+        if (LightFlickerController.Instance != null)
+            LightFlickerController.Instance.OnGridDamaged(0.1f);
 
         CheckGameOver();
     }
@@ -104,10 +116,9 @@ public class SurvivalMeter : MonoBehaviour
 
     void UpdateUI()
     {
-        // VISUAL FIX: Calculate percentage based on STARTING Max HP (100).
-        // This ensures that if Max Capacity drops to 85, the visual meter NEVER goes to 100% full.
-        // It will look like the container has shrunk or can't be filled.
-        float percentage = (float)currentHP / startingMaxHP * 100f;
+        float percentage = 0;
+        if (currentMaxHP > 0)
+            percentage = (float)currentHP / startingMaxHP * 100f; // Use Starting Max for visual consistency
 
         if (hpText != null)
         {
@@ -116,8 +127,6 @@ public class SurvivalMeter : MonoBehaviour
 
         if (videoPlayer == null || meterRawImage == null) return;
 
-        // 1. Handle 100% Full State (Only show if we are actually at STARTING MAX)
-        // If cap is 85, we should never show the "Perfectly Full" sprite.
         if (currentHP >= startingMaxHP && fullSprite != null)
         {
             videoPlayer.Stop();
@@ -125,7 +134,6 @@ public class SurvivalMeter : MonoBehaviour
             return;
         }
 
-        // 2. Handle 0% Empty State
         if (currentHP <= minHP && emptySprite != null)
         {
             videoPlayer.Stop();
@@ -133,11 +141,7 @@ public class SurvivalMeter : MonoBehaviour
             return;
         }
 
-        // 3. Handle Video States
-        if (videoPlayer.targetTexture != null)
-        {
-            meterRawImage.texture = videoPlayer.targetTexture;
-        }
+        if (videoPlayer.targetTexture != null) meterRawImage.texture = videoPlayer.targetTexture;
 
         if (visualStages.Count > 0)
         {

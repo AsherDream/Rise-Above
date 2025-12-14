@@ -8,6 +8,11 @@ public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager Instance;
 
+    [Title("Settings")]
+    [InfoBox("How long the dialogue stays on screen before auto-closing.")]
+    [Range(1f, 10f)]
+    public float dialogueDuration = 5f; // Default extended to 5 seconds
+
     [Title("UI References")]
     [Required] public GameObject dialoguePanel;
     [Required] public Image sisterPortraitImage;
@@ -43,9 +48,12 @@ public class DialogueManager : MonoBehaviour
         UpdatePortrait(mood);
     }
 
-    public void StartDialogue(DialogueNode startNode, float duration = 3f)
+    public void StartDialogue(DialogueNode startNode, float duration = -1f)
     {
         if (startNode == null) return;
+
+        // Use the inspector value if no specific duration is passed (passed as -1)
+        float activeDuration = duration > 0 ? duration : dialogueDuration;
 
         // Stop any pending close timer
         if (autoCloseCoroutine != null) StopCoroutine(autoCloseCoroutine);
@@ -53,8 +61,8 @@ public class DialogueManager : MonoBehaviour
         dialoguePanel.SetActive(true);
         DisplayNode(startNode);
 
-        // Automatically close after a few seconds
-        autoCloseCoroutine = StartCoroutine(AutoCloseDialogue(duration));
+        // Automatically close after the set duration
+        autoCloseCoroutine = StartCoroutine(AutoCloseDialogue(activeDuration));
     }
 
     private void DisplayNode(DialogueNode node)
