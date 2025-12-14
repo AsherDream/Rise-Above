@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Milk_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: 4921689125976975732, guid: 7429e8d7b276aff448b4211700d26066, type: 3}
   itemName: Milk
   itemDescription: Calcium for strong bones! Drink it fast before it turns into chunky
     yogurt.

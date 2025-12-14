@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: FirstAidKit_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: -4642417464112366884, guid: 18dc008bd4fc9844fa3487457bc9f5a1, type: 3}
   itemName: First AId Kit
   itemDescription: For cuts, scrapes, and bad decisions. Better to have it and not
     need it.

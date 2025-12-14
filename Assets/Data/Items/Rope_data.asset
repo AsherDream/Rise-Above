@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Rope_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: 8662384261516989540, guid: 8a7cd7e6c49e7274c910c345d38f29b3, type: 3}
   itemName: Rope
   itemDescription: Incredibly versatile. Climb, tie, or skip. Just don't get tangled
     up.

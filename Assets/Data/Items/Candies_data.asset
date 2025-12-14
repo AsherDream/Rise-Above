@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Candies_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: 8277839000173883053, guid: 81f36e99fadf60a4785cc3d36c170f5a, type: 3}
   itemName: Candies
   itemDescription: A quick sugar rush for low morale. Good for trading, bad for your
     teeth
