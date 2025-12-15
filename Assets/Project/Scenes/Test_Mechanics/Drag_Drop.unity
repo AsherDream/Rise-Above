@@ -1813,7 +1813,7 @@ MonoBehaviour:
   splatterRawImage: {fileID: 121241486}
   splatterCanvasGroup: {fileID: 121241483}
   splatterRect: {fileID: 121241485}
-  milkTexture: {fileID: 0}
+  milkTexture: {fileID: 2800000, guid: 76520e97885eca74aab12b7970fefb59, type: 3}
   eggTexture: {fileID: 2800000, guid: 99ad3ecb072b2ec4c8726527623bf658, type: 3}
   dirtBrush: {fileID: 2800000, guid: bab176e519690b649b996e6bbe5e1225, type: 3}
   brushSize: 20

@@ -23,8 +23,6 @@ public class CleanupManager : MonoBehaviour
     [Tooltip("Scale of the brush applied to texture.")]
     public float brushScale = 1.0f;
 
-    // REMOVED: scrubDifficulty and scrubSensitivity as we are using pixel counting now
-
     [Title("Audio")]
     public AudioSource audioSource;
     public AudioClip splatSound;
@@ -34,7 +32,11 @@ public class CleanupManager : MonoBehaviour
     public RectTransform debugCursor;
 
     private Texture2D dirtMaskTexture;
-    private Color32[] texturePixels; // Cached pixel array for speed
+    private Color32[] texturePixels; // The target texture pixels
+    private byte[] brushAlphaPixels; // OPTIMIZATION: Cache brush alpha as bytes
+    private int cachedBrushWidth;
+    private int cachedBrushHeight;
+
     private bool isCleaning = false;
     private float dirtAmountTotal;
     private float dirtAmount;
@@ -44,10 +46,18 @@ public class CleanupManager : MonoBehaviour
     private Vector2Int lastPixelPos;
     private bool hasLastPos = false;
 
+    public static bool IsMessActive
+    {
+        get { return Instance != null && Instance.isCleaning; }
+    }
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        // Pre-cache the brush texture to avoid GetPixel in Update loop
+        CacheBrushPixels();
 
         if (splatterCanvasGroup != null)
         {
@@ -60,6 +70,22 @@ public class CleanupManager : MonoBehaviour
         if (rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
         {
             uiCamera = rootCanvas.worldCamera;
+        }
+    }
+
+    // Optimization: Cache brush pixels into a simple byte array (0-255)
+    private void CacheBrushPixels()
+    {
+        if (dirtBrush == null) return;
+
+        cachedBrushWidth = dirtBrush.width;
+        cachedBrushHeight = dirtBrush.height;
+        Color32[] rawBrushPixels = dirtBrush.GetPixels32();
+        brushAlphaPixels = new byte[rawBrushPixels.Length];
+
+        for (int i = 0; i < rawBrushPixels.Length; i++)
+        {
+            brushAlphaPixels[i] = rawBrushPixels[i].a;
         }
     }
 
@@ -80,33 +106,32 @@ public class CleanupManager : MonoBehaviour
                 int pixelX = (int)(normalizedX * dirtMaskTexture.width);
                 int pixelY = (int)(normalizedY * dirtMaskTexture.height);
 
-                // --- OPTIMIZED SMOOTH ERASING ---
                 bool pixelsChanged = false;
 
                 if (hasLastPos)
                 {
-                    // Draw line on the cached array
                     if (PaintLine(lastPixelPos.x, lastPixelPos.y, pixelX, pixelY))
                         pixelsChanged = true;
                 }
                 else
                 {
-                    // Draw dot on the cached array
                     if (Paint(pixelX, pixelY))
                         pixelsChanged = true;
                 }
 
-                // ONLY Apply to GPU once per frame!
                 if (pixelsChanged)
                 {
+                    // Update the texture
                     dirtMaskTexture.SetPixels32(texturePixels);
-                    dirtMaskTexture.Apply();
+                    // OPTIMIZATION: Apply(false) prevents mipmap generation (slow and unneeded for UI)
+                    dirtMaskTexture.Apply(false);
 
                     if (audioSource != null && scrubSound != null && !audioSource.isPlaying)
                         audioSource.PlayOneShot(scrubSound);
+
+                    CheckCompletion();
                 }
 
-                // Update Positions
                 lastPixelPos = new Vector2Int(pixelX, pixelY);
                 hasLastPos = true;
             }
@@ -115,14 +140,13 @@ public class CleanupManager : MonoBehaviour
         {
             hasLastPos = false;
         }
-
-        CheckCompletion();
     }
 
     private bool PaintLine(int x0, int y0, int x1, int y1)
     {
         bool changed = false;
         float distance = Vector2.Distance(new Vector2(x0, y0), new Vector2(x1, y1));
+        // Optimization: Don't step perfectly every pixel, step by 25% of brush size is enough coverage
         float stepSize = Mathf.Max(1f, brushSize * brushScale * 0.25f);
         int steps = Mathf.CeilToInt(distance / stepSize);
 
@@ -139,41 +163,52 @@ public class CleanupManager : MonoBehaviour
 
     private bool Paint(int pixelX, int pixelY)
     {
-        if (pixelX < 0 || pixelX >= dirtMaskTexture.width || pixelY < 0 || pixelY >= dirtMaskTexture.height) return false;
+        int brushW = Mathf.RoundToInt(cachedBrushWidth * brushScale);
+        int brushH = Mathf.RoundToInt(cachedBrushHeight * brushScale);
 
-        int brushW = Mathf.RoundToInt(dirtBrush.width * brushScale);
-        int brushH = Mathf.RoundToInt(dirtBrush.height * brushScale);
         int startX = pixelX - (brushW / 2);
         int startY = pixelY - (brushH / 2);
 
-        bool didClean = false;
+        // OPTIMIZATION: Calculate loop bounds beforehand to avoid "if" checks inside the loop
+        int endX = startX + brushW;
+        int endY = startY + brushH;
+
         int texWidth = dirtMaskTexture.width;
         int texHeight = dirtMaskTexture.height;
 
-        for (int x = 0; x < brushW; x++)
+        // Clamp to texture boundaries
+        int loopStartX = Mathf.Max(0, startX);
+        int loopStartY = Mathf.Max(0, startY);
+        int loopEndX = Mathf.Min(texWidth, endX);
+        int loopEndY = Mathf.Min(texHeight, endY);
+
+        bool didClean = false;
+
+        for (int y = loopStartY; y < loopEndY; y++)
         {
-            for (int y = 0; y < brushH; y++)
+            // Pre-calculate row index for the target texture
+            int targetRowIndex = y * texWidth;
+
+            // Map 'y' back to brush coordinate space
+            int brushY = (int)(((y - startY) / (float)brushH) * cachedBrushHeight);
+            int brushRowIndex = brushY * cachedBrushWidth;
+
+            for (int x = loopStartX; x < loopEndX; x++)
             {
-                int targetX = startX + x;
-                int targetY = startY + y;
+                // Map 'x' back to brush coordinate space
+                int brushX = (int)(((x - startX) / (float)brushW) * cachedBrushWidth);
 
-                if (targetX >= 0 && targetX < texWidth && targetY >= 0 && targetY < texHeight)
+                // Get cached alpha (No GetPixel calls!)
+                byte alpha = brushAlphaPixels[brushRowIndex + brushX];
+
+                if (alpha > 25) // Threshold
                 {
-                    // Map brush alpha
-                    int brushUX = (int)((float)x / brushW * dirtBrush.width);
-                    int brushUY = (int)((float)y / brushH * dirtBrush.height);
-
-                    // Simple optimization: check brush alpha first
-                    if (dirtBrush.GetPixel(brushUX, brushUY).a > 0.1f)
+                    int index = targetRowIndex + x;
+                    if (texturePixels[index].a != 0)
                     {
-                        int index = targetY * texWidth + targetX;
-                        // Modify the CACHED array directly (Very Fast)
-                        if (texturePixels[index].a > 0)
-                        {
-                            texturePixels[index].a = 0; // Set alpha to 0
-                            dirtAmount--;
-                            didClean = true;
-                        }
+                        texturePixels[index].a = 0;
+                        dirtAmount--;
+                        didClean = true;
                     }
                 }
             }
@@ -191,19 +226,27 @@ public class CleanupManager : MonoBehaviour
 
         if (sourceTex == null) return;
 
-        // Clone Texture
-        dirtMaskTexture = new Texture2D(sourceTex.width, sourceTex.height, TextureFormat.RGBA32, false);
-        // Cache the pixels immediately!
-        texturePixels = sourceTex.GetPixels32();
+        // OPTIMIZATION: Prevent Memory Leak
+        // If we generated a texture before, destroy it to free VRAM
+        if (dirtMaskTexture != null) Destroy(dirtMaskTexture);
 
+        // Create new texture
+        dirtMaskTexture = new Texture2D(sourceTex.width, sourceTex.height, TextureFormat.RGBA32, false);
+
+        // Copy pixels
+        texturePixels = sourceTex.GetPixels32();
         dirtMaskTexture.SetPixels32(texturePixels);
-        dirtMaskTexture.Apply();
+        dirtMaskTexture.Apply(false); // No mipmaps
 
         splatterRawImage.texture = dirtMaskTexture;
 
-        // Calculate dirt
+        // Calculate dirt amount
         dirtAmount = 0;
-        for (int i = 0; i < texturePixels.Length; i++) { if (texturePixels[i].a > 10) dirtAmount++; }
+        // Fast iteration
+        for (int i = 0; i < texturePixels.Length; i++)
+        {
+            if (texturePixels[i].a > 10) dirtAmount++;
+        }
         dirtAmountTotal = dirtAmount;
 
         // Show UI
@@ -221,20 +264,22 @@ public class CleanupManager : MonoBehaviour
     {
         if (dirtAmountTotal <= 0) return;
 
-        // Win by pixel count (Precision)
         float percentageRemaining = dirtAmount / dirtAmountTotal;
 
-        // Debug log to see progress
-        // Debug.Log($"Dirt Remaining: {percentageRemaining:P}");
-
-        // Only finish if < 5% remains (meaning 95% is cleaned)
         if (percentageRemaining < 0.05f)
         {
             isCleaning = false;
-
             splatterCanvasGroup.alpha = 0f;
             splatterCanvasGroup.blocksRaycasts = false;
             splatterCanvasGroup.gameObject.SetActive(false);
+
+            // Cleanup texture memory when finished
+            if (dirtMaskTexture != null)
+            {
+                Destroy(dirtMaskTexture);
+                dirtMaskTexture = null;
+            }
+
             if (DialogueManager.Instance != null) DialogueManager.Instance.ForcePortrait(SisterMood.Normal);
             Debug.Log("Cleanup Complete!");
         }
