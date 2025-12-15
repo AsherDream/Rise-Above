@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Raincoat_Female_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: -5598749469923254124, guid: 397ead113e5764d468ec906912509e6a, type: 3}
   itemName: Raincoat_Female
   itemDescription: A shield against the miserable cold. Stay warm, stay dry, and
     keep moving forward.

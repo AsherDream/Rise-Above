@@ -77,7 +77,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             currentlyHoveringItem = null;
 
             // JUICE: Shake the cart to say "NO!"
-            transform.DOShakePosition(0.3f, 10f, 20, 90f);
+            transform.DOShakePosition(0.3f, 10f, 20, 90f).SetUpdate(true);
             return;
         }
 
@@ -94,13 +94,13 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             if (droppedVisual != null)
             {
                 droppedVisual.transform.localScale = Vector3.zero;
-                droppedVisual.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBounce);
+                droppedVisual.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBounce).SetUpdate(true);
             }
 
             // JUICE: Squash the cart slightly to feel the weight
-            transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1);
+            transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1).SetUpdate(true);
 
-            // 2. Trigger Logic
+            // 2. Trigger Logic (Dialogue + Survival Meter + MESS)
             RunItemLogic(draggable);
 
             // 3. Update Counts
@@ -117,8 +117,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
     private GameObject PlaceItemInPile(Sprite itemSprite, Color itemColor)
     {
-        if (cartContentParent == null || cartItemPrefab == null) return null; // Changed to return null
-
+        if (cartContentParent == null || cartItemPrefab == null) return null;
         GameObject newItemGO = Instantiate(cartItemPrefab, cartContentParent);
         Image newItemImage = newItemGO.GetComponent<Image>();
         RectTransform itemRect = newItemGO.GetComponent<RectTransform>();
@@ -164,7 +163,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
         }
 
-        // 2. Logic & Shake
+        // 2. Logic & Shake & Mess
         if (SurvivalMeter.Instance != null)
         {
             switch (draggable.itemData.itemType)
@@ -187,6 +186,20 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                     if (UIShake.Instance != null) UIShake.Instance.ShakeWasteful();
                     if (SisterReactionController.Instance != null)
                         SisterReactionController.Instance.TriggerNegativeSound();
+
+                    if (LightFlickerController.Instance != null)
+                        LightFlickerController.Instance.OnGridDamaged(0.1f);
+
+                    // --- NEW: Trigger Mess with Type ---
+                    if (CleanupManager.Instance != null)
+                    {
+                        string itemName = draggable.itemData.itemName.ToLower();
+                        if (itemName.Contains("milk") || itemName.Contains("egg"))
+                        {
+                            // Pass the name ("milk" or "egg") to choose texture
+                            CleanupManager.Instance.TriggerMess(itemName);
+                        }
+                    }
                     break;
             }
         }

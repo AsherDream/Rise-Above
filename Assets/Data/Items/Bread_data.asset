@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Bread_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: -1660761858345613354, guid: 2a30d7225a8b90a4482344bd5a25b702, type: 3}
   itemName: Bread
   itemDescription: Carbs are life. Good for sandwiches, bad when it gets moldy.
   itemType: 0

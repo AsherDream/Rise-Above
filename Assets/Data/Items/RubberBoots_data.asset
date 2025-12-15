@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: RubberBoots_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: 8661620604517209764, guid: d90359646837ca645bebc181dea3e59f, type: 3}
   itemName: Rubber Boots
   itemDescription: Keep your feet dry and happy. Trench foot is not a fun time.
   itemType: 0

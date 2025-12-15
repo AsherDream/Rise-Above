@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Raincoat_Male_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: 1873475220370967018, guid: 10abc5e0766b39c46838e78b6096b38e, type: 3}
   itemName: Raincoat_Male
   itemDescription: Sturdy, reliable gear. Keeps the rain out so you can focus on
     the job. Stay dry, stay alive.
