@@ -25,6 +25,10 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     public float positionJitter = 30f;
     public float rotationJitter = 45f;
 
+    [Title("Toss Animation Settings")]
+    public float tossJumpPower = 100f; // How high the arc goes
+    public float tossDuration = 0.4f;  // How long the flight takes
+
     private DraggableItem currentlyHoveringItem = null;
     private int itemsInCartCount = 0;
     private float currentPileX;
@@ -87,18 +91,17 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         {
             draggable.isDropSuccessful = true;
 
-            // 1. Place the item visually AND get reference
-            GameObject droppedVisual = PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor);
+            // --- UPDATE START: Capture the drop position ---
+            // We need to know where the item was in world space right when let go
+            Vector3 startDropPos = draggable.transform.position;
 
-            // JUICE: Animate the new item landing!
-            if (droppedVisual != null)
-            {
-                droppedVisual.transform.localScale = Vector3.zero;
-                droppedVisual.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBounce).SetUpdate(true);
-            }
+            // 1. Place the item visually (triggering the toss animation)
+            GameObject droppedVisual = PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor, startDropPos);
+            // --- UPDATE END ---
 
-            // JUICE: Squash the cart slightly to feel the weight
-            transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1).SetUpdate(true);
+            // JUICE: Squash the cart slightly to feel the weight of it landing
+            // Delayed slightly to sync with the item landing in the cart
+            transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1).SetDelay(tossDuration * 0.8f).SetUpdate(true);
 
             // 2. Trigger Logic (Dialogue + Survival Meter + MESS)
             RunItemLogic(draggable);
@@ -115,9 +118,12 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         currentlyHoveringItem = null;
     }
 
-    private GameObject PlaceItemInPile(Sprite itemSprite, Color itemColor)
+    // --- UPDATED METHOD SIGNATURE AND LOGIC ---
+    private GameObject PlaceItemInPile(Sprite itemSprite, Color itemColor, Vector3 startWorldPos)
     {
         if (cartContentParent == null || cartItemPrefab == null) return null;
+
+        // 1. Create the new item
         GameObject newItemGO = Instantiate(cartItemPrefab, cartContentParent);
         Image newItemImage = newItemGO.GetComponent<Image>();
         RectTransform itemRect = newItemGO.GetComponent<RectTransform>();
@@ -126,8 +132,10 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
         newItemImage.sprite = itemSprite;
         newItemImage.color = itemColor;
+        // Ensure it starts full scale
         itemRect.localScale = Vector3.one;
 
+        // 2. Calculate the Target Position (where it belongs in the pile)
         float itemWidth = itemRect.rect.width * itemRect.localScale.x;
 
         if (currentPileX + itemWidth > rightBorder.anchoredPosition.x && currentPileX != leftBorder.anchoredPosition.x)
@@ -141,16 +149,36 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         float xJitter = Random.Range(-positionJitter, positionJitter);
         float yJitter = Random.Range(-positionJitter / 2, positionJitter / 2);
 
-        itemRect.anchoredPosition = new Vector2(baseXPos + xJitter, baseYPos + yJitter);
-        itemRect.localRotation = Quaternion.Euler(0, 0, Random.Range(-rotationJitter, rotationJitter));
+        Vector2 targetAnchoredPos = new Vector2(baseXPos + xJitter, baseYPos + yJitter);
+
+        // Clamp to borders
+        float halfWidth = itemWidth / 2f;
+        targetAnchoredPos.x = Mathf.Clamp(targetAnchoredPos.x, leftBorder.anchoredPosition.x + halfWidth, rightBorder.anchoredPosition.x - halfWidth);
+
+        // UPDATE CURSOR for next item
         currentPileX += itemWidth;
 
-        Vector2 clampedPos = itemRect.anchoredPosition;
-        float halfWidth = itemWidth / 2f;
-        clampedPos.x = Mathf.Clamp(clampedPos.x, leftBorder.anchoredPosition.x + halfWidth, rightBorder.anchoredPosition.x - halfWidth);
-        itemRect.anchoredPosition = clampedPos;
+        // --- TOSS ANIMATION LOGIC ---
 
-        return newItemGO; // Return the object so we can animate it
+        // 3. Set Initial Position: Convert the world drop point to local space relative to the cart container
+        Vector2 localStartPos;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(cartContentParent, Input.mousePosition, null, out localStartPos);
+        itemRect.anchoredPosition = localStartPos;
+
+        // 4. Animate: Jump from mouse position to target pile position
+        Sequence tossSequence = DOTween.Sequence();
+
+        // The Arc (Jump)
+        tossSequence.Append(itemRect.DOJumpAnchorPos(targetAnchoredPos, tossJumpPower, 1, tossDuration).SetEase(Ease.OutQuad));
+
+        // The Spin (Rotate while flying)
+        float randomRotation = Random.Range(-rotationJitter, rotationJitter);
+        tossSequence.Join(itemRect.DORotate(new Vector3(0, 0, randomRotation), tossDuration, RotateMode.FastBeyond360));
+
+        // Ensure it plays even if paused (optional, depending on your design preference)
+        tossSequence.SetUpdate(true);
+
+        return newItemGO;
     }
 
     private void RunItemLogic(DraggableItem draggable)
@@ -190,7 +218,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                     if (LightFlickerController.Instance != null)
                         LightFlickerController.Instance.OnGridDamaged(0.1f);
 
-                    // --- NEW: Trigger Mess with Type ---
+                    // --- Trigger Mess with Type ---
                     if (CleanupManager.Instance != null)
                     {
                         string itemName = draggable.itemData.itemName.ToLower();

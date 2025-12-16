@@ -1159,6 +1159,8 @@ MonoBehaviour:
   rowHeight: 30.57
   positionJitter: 30
   rotationJitter: 45
+  tossJumpPower: 100
+  tossDuration: 0.4
 --- !u!114 &242280934
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1969,12 +1971,17 @@ MonoBehaviour:
   idleNodes:
   - {fileID: 11400000, guid: 0b2999bcd7a855c4889dc559da5356c0, type: 2}
   - {fileID: 11400000, guid: 9eee485e03d71d448a7cc627cd05cc99, type: 2}
+  specialAnnoyedNode: {fileID: 11400000, guid: eff8b5eacac56304e81768595e3b348b, type: 2}
   reactionAudioSource: {fileID: 458760792}
   idleSound: {fileID: 8300000, guid: 28a5e954f08440444a1e1005261d5c64, type: 3}
   hoverSound: {fileID: 8300000, guid: 6893143c631dadb439d0a1749d21c9dd, type: 3}
   alertSound: {fileID: 0}
   positiveReactionSounds: []
   negativeReactionSounds: []
+  otherSourcesToDuck: []
+  duckedVolumePercentage: 0.3
+  duckingAttack: 0.3
+  duckingRelease: 1
 --- !u!4 &458760794
 Transform:
   m_ObjectHideFlags: 0
@@ -3795,6 +3802,7 @@ MonoBehaviour:
   rainAudioSource: {fileID: 887124093}
   startRainVolume: 0.2
   endRainVolume: 0.5
+  masterVolumeMultiplier: 1
   thunderReactionNodes:
   - {fileID: 11400000, guid: c430e50c91a5d804e805ddac7289ccc8, type: 2}
   - {fileID: 11400000, guid: da7cfc3639758074e8adcba3c08536df, type: 2}
@@ -5404,6 +5412,7 @@ MonoBehaviour:
   leftKey: 97
   rightKey: 100
   cartAudioSource: {fileID: 0}
+  smoothness: 10
 --- !u!82 &1357866533
 AudioSource:
   m_ObjectHideFlags: 0

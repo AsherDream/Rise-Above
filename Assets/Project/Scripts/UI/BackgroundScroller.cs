@@ -15,6 +15,10 @@ public class BackgroundScroller : MonoBehaviour
     [Title("Audio")]
     [SerializeField] private AudioSource cartAudioSource; // Reference to the Audio Source
 
+ 
+    [SerializeField] private float smoothness = 10f; // Higher = Snappier, Lower = Floaty
+    private float currentVelocity = 0f;
+
     private RectTransform rect;
 
     void Awake()
@@ -25,50 +29,35 @@ public class BackgroundScroller : MonoBehaviour
 
     void Update()
     {
-        // If the inspector is open, stop moving and stop sound
-        if (ItemInspector.IsInspecting)
+        if (ItemInspector.IsInspecting) return; // Stop logic if inspecting
+
+        float targetVelocity = 0f;
+
+        // Determine target direction
+        if (Input.GetKey(leftKey)) targetVelocity = scrollSpeed;
+        if (Input.GetKey(rightKey)) targetVelocity = -scrollSpeed;
+
+        // Apply "Inertia" using Lerp
+        currentVelocity = Mathf.Lerp(currentVelocity, targetVelocity, Time.deltaTime * smoothness);
+
+        // Move
+        if (Mathf.Abs(currentVelocity) > 0.1f)
         {
-            if (cartAudioSource != null && cartAudioSource.isPlaying) cartAudioSource.Stop();
-            return;
-        }
+            Vector2 newPos = rect.anchoredPosition;
+            newPos.x += currentVelocity * Time.deltaTime;
+            newPos.x = Mathf.Clamp(newPos.x, minXPosition, maxXPosition);
+            rect.anchoredPosition = newPos;
 
-        Vector2 newPosition = rect.anchoredPosition;
-        bool isMoving = false; // Track if we are moving this frame
-
-        // Check for 'left' key
-        if (Input.GetKey(leftKey))
-        {
-            newPosition.x += scrollSpeed * Time.deltaTime;
-            isMoving = true;
-        }
-
-        // Check for 'right' key
-        if (Input.GetKey(rightKey))
-        {
-            newPosition.x -= scrollSpeed * Time.deltaTime;
-            isMoving = true;
-        }
-
-        // Apply movement logic
-        if (isMoving)
-        {
-            // Clamp position
-            newPosition.x = Mathf.Clamp(newPosition.x, minXPosition, maxXPosition);
-            rect.anchoredPosition = newPosition;
-
-            // Handle Audio
-            if (cartAudioSource != null && !cartAudioSource.isPlaying)
+            // Smart Audio: Pitch changes with speed?
+            if (cartAudioSource != null)
             {
-                cartAudioSource.Play();
+                if (!cartAudioSource.isPlaying) cartAudioSource.Play();
+                cartAudioSource.pitch = Mathf.Lerp(0.8f, 1.2f, Mathf.Abs(currentVelocity) / scrollSpeed);
             }
         }
         else
         {
-            // Stop Audio if not moving
-            if (cartAudioSource != null && cartAudioSource.isPlaying)
-            {
-                cartAudioSource.Stop();
-            }
+            if (cartAudioSource != null && cartAudioSource.isPlaying) cartAudioSource.Stop();
         }
     }
 }

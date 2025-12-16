@@ -2,8 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
 using System.Collections;
-using System.Collections.Generic; // Required for List
-using DG.Tweening;
+using System.Collections.Generic;
+using DG.Tweening; // Keep DOTween
 
 public class StormController : MonoBehaviour
 {
@@ -27,9 +27,13 @@ public class StormController : MonoBehaviour
     [Range(0, 1)] public float startRainVolume = 0.2f;
     [Range(0, 1)] public float endRainVolume = 0.8f;
 
+    [Title("Audio Ducking")]
+    [ReadOnly]
+    public float masterVolumeMultiplier = 1.0f; // New Control Variable for Ducking
+
     [Title("Sister Reactions")]
     [InfoBox("Dialogue nodes to play when thunder strikes.")]
-    public List<DialogueNode> thunderReactionNodes; // New List for dialogue
+    public List<DialogueNode> thunderReactionNodes;
 
     private float thunderTimer;
     private float initialLevelTime;
@@ -67,19 +71,29 @@ public class StormController : MonoBehaviour
     {
         if (Time.timeScale == 0) return;
 
-        HandleThunder();
-        HandleRainVolume();
-    }
+        // --- DYNAMIC DIFFICULTY (PANIC PHASE) ---
+        // As time drops from 120s to 0s, multiplier goes from 1.0 to 0.2
+        float timeRatio = 1.0f;
+        if (Scene1Manager.Instance != null)
+        {
+            timeRatio = Scene1Manager.Instance.currentTime / Scene1Manager.Instance.levelTimeInSeconds;
+        }
+        float panicMultiplier = Mathf.Clamp(timeRatio, 0.2f, 1.0f);
 
-    private void HandleThunder()
-    {
+        // Countdown
         thunderTimer -= Time.deltaTime;
 
+        // Thunder logic
         if (thunderTimer <= 0)
         {
             TriggerThunder();
-            ResetTimer();
+            // Reset timer using the panic multiplier (faster thunder at end of level)
+            float nextDelay = Random.Range(minThunderInterval, maxThunderInterval) * panicMultiplier;
+            thunderTimer = nextDelay;
         }
+
+        // Always update rain volume
+        HandleRainVolume();
     }
 
     private void HandleRainVolume()
@@ -89,7 +103,10 @@ public class StormController : MonoBehaviour
         float currentTime = Scene1Manager.Instance.currentTime;
         float progress = 1f - (currentTime / initialLevelTime);
 
-        rainAudioSource.volume = Mathf.Lerp(startRainVolume, endRainVolume, progress);
+        // MODIFIED: We multiply the calculation by our new masterVolumeMultiplier
+        // This allows the SisterReactionController to "duck" the volume without breaking the rain progression
+        float baseVolume = Mathf.Lerp(startRainVolume, endRainVolume, progress);
+        rainAudioSource.volume = baseVolume * masterVolumeMultiplier;
     }
 
     private void ResetTimer()

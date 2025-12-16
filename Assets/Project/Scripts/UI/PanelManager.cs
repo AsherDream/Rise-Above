@@ -62,10 +62,19 @@ public class PanelManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (CleanupManager.IsMessActive)
         {
-            HandleBack();
+            return;
         }
+
+        
+        if (ItemInspector.IsInspecting)
+        {
+            return;
+        }
+
+        // 4. If clear, proceed to handle the Back/Pause action
+        HandleBack();
     }
 
     [Button("Back (Universal)")]
