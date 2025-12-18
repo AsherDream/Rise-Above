@@ -18,4 +18,7 @@ MonoBehaviour:
     keep you moving.
   itemType: 0
   impactValue: 10
+  educationalTip: Great pick. Energy-dense, lightweight, and zero prep. In a high-stress
+    crisis, <color=green>easy calories</color> are vital for sustaining energy.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 7a902a760af892341993511409d87ae4, type: 2}

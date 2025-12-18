@@ -17,4 +17,7 @@ MonoBehaviour:
   itemDescription: Full of nostalgia, but it breaks faster than you think. Play gently!
   itemType: 1
   impactValue: 15
+  educationalTip: Emotional comfort vs. physical burden. Consoles <color=red>require
+    power you won't have</color>. A simple deck of cards is lighter and reusable.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: ad1f978d61dbf9447a5bfc790b8278f5, type: 2}

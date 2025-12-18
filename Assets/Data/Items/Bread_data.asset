@@ -17,4 +17,7 @@ MonoBehaviour:
   itemDescription: Carbs are life. Good for sandwiches, bad when it gets moldy.
   itemType: 0
   impactValue: 10
+  educationalTip: Short-term only. In humid flood conditions, bread <color=red>molds
+    rapidly</color> (often within 24 hours). Canned goods are safer.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 5ddc281a31094c547b80384299294f23, type: 2}

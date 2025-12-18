@@ -62,19 +62,27 @@ public class PanelManager : MonoBehaviour
 
     private void Update()
     {
-        if (CleanupManager.IsMessActive)
+        // 1. Check for Key Input FIRST
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            return;
-        }
+            // --- START OF INPUT BLOCK ---
 
-        
-        if (ItemInspector.IsInspecting)
-        {
-            return;
-        }
+            // 2. Check for blockers (Messy Game / Inspection)
+            if (CleanupManager.IsMessActive)
+            {
+                return; // Stop here if cleaning
+            }
 
-        // 4. If clear, proceed to handle the Back/Pause action
-        HandleBack();
+            if (ItemInspector.IsInspecting)
+            {
+                return; // Stop here if reading text
+            }
+
+            // 3. If no blockers, THEN toggle the menu
+            HandleBack();
+
+            // --- END OF INPUT BLOCK ---
+        }
     }
 
     [Button("Back (Universal)")]

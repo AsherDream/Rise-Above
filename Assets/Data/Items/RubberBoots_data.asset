@@ -17,4 +17,7 @@ MonoBehaviour:
   itemDescription: Keep your feet dry and happy. Trench foot is not a fun time.
   itemType: 0
   impactValue: 10
+  educationalTip: Essential protection. Floodwater hides sharp objects and open manholes.
+    Boots <color=green>protect feet from injury</color> and contaminated water.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: f47033c53351bc34b82ce3114201f7e0, type: 2}

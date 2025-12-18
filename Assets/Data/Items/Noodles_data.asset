@@ -18,4 +18,7 @@ MonoBehaviour:
     best. A true survival staple.
   itemType: 0
   impactValue: 10
+  educationalTip: Good backup. Lightweight comfort food. Just ensure you have a way
+    to <color=green>boil water safely</color> to prepare them.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 05a16ba87ba04e241918110ea3175e29, type: 2}

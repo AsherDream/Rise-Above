@@ -18,4 +18,7 @@ MonoBehaviour:
     trip.
   itemType: 2
   impactValue: 10
+  educationalTip: Too fragile. Raw eggs break easily under pressure, creating a mess
+    that ruins other supplies and <color=red>attracts pests</color>.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 163a82d189a19bf4f9257827c814de8b, type: 2}

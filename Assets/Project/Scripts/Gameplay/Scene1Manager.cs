@@ -4,20 +4,24 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Sirenix.OdinInspector;
 using System.Collections;
+using System.Collections.Generic; // REQUIRED for List
 
 public class Scene1Manager : MonoBehaviour
 {
     public static Scene1Manager Instance;
 
     [Title("Level Settings")]
-    public float levelTimeInSeconds = 120f; // 2 Minutes
+    public float levelTimeInSeconds = 120f;
     public int targetItemCount = 9;
 
     [Title("Timer Beep Settings")]
-    [Tooltip("Time in seconds when the timer starts beeping.")]
     public float beepStartTime = 10f;
     [Required] public AudioSource timerAudioSource;
     public AudioClip beepSound;
+
+    [Title("Checkout Audio")]
+    public AudioSource sfxSource;
+    public AudioClip checkoutSound;
 
     [Title("UI References")]
     [Required] public TextMeshProUGUI timerText;
@@ -25,17 +29,21 @@ public class Scene1Manager : MonoBehaviour
     [Required] public GameObject gameOverPanel;
     [Required] public TextMeshProUGUI gameOverReasonText;
     [Required] public GameObject levelCompletePanel;
-    [Required] public TextMeshProUGUI summaryText;
+
+    // REMOVED: summaryText (EndScreenManager handles this now)
+
+    // --- TRACKING LIST FOR END SCREEN ---
+    [ReadOnly]
+    public List<InspectableItemData> collectedItemsList = new List<InspectableItemData>();
+    // ------------------------------------
 
     // Internal State
     [Title("Debug Info")]
     [ReadOnly] public float currentTime;
     [ReadOnly] public int currentItems;
     private bool isGameActive = true;
-
-    // Store the original color you set in the Inspector
     private Color defaultTimerColor;
-    private bool hasBeeped = false; // New flag to play sound only once
+    private bool hasBeeped = false;
 
     private void Awake()
     {
@@ -47,19 +55,18 @@ public class Scene1Manager : MonoBehaviour
     {
         currentTime = levelTimeInSeconds;
         currentItems = 0;
-        isGameActive = true;
-        hasBeeped = false; // Reset flag
 
-        // Save the color you picked in the editor
-        if (timerText != null)
-        {
-            defaultTimerColor = timerText.color;
-        }
+        // Clear the list when level starts
+        collectedItemsList.Clear();
+
+        isGameActive = true;
+        hasBeeped = false;
+
+        if (timerText != null) defaultTimerColor = timerText.color;
 
         gameOverPanel.SetActive(false);
         levelCompletePanel.SetActive(false);
 
-        // Initial Button State
         checkoutButton.interactable = false;
         if (checkoutButton.image != null) checkoutButton.image.color = Color.gray;
 
@@ -74,7 +81,6 @@ public class Scene1Manager : MonoBehaviour
         currentTime -= Time.deltaTime;
         UpdateTimerUI();
 
-        // Check for Beep (Only play once)
         if (currentTime <= beepStartTime && !hasBeeped && currentTime > 0)
         {
             PlayTimerBeep();
@@ -88,7 +94,7 @@ public class Scene1Manager : MonoBehaviour
 
     private void PlayTimerBeep()
     {
-        hasBeeped = true; // Ensure it only plays once
+        hasBeeped = true;
         if (timerAudioSource != null && beepSound != null)
         {
             timerAudioSource.PlayOneShot(beepSound);
@@ -103,20 +109,17 @@ public class Scene1Manager : MonoBehaviour
             float seconds = Mathf.FloorToInt(currentTime % 60);
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
 
-            // Turn red only when time is low, otherwise use your custom color
-            if (currentTime <= 30f)
-            {
-                timerText.color = Color.red;
-            }
-            else
-            {
-                timerText.color = defaultTimerColor;
-            }
+            if (currentTime <= 30f) timerText.color = Color.red;
+            else timerText.color = defaultTimerColor;
         }
     }
 
-    public void OnItemCollected()
+    // --- Captures the Item Data ---
+    public void OnItemCollected(InspectableItemData itemData)
     {
+        // Add the item to our list so the End Screen can display it later
+        if (itemData != null) collectedItemsList.Add(itemData);
+
         currentItems++;
         Debug.Log($"[Scene1Manager] Items: {currentItems}/{targetItemCount}");
 
@@ -138,7 +141,6 @@ public class Scene1Manager : MonoBehaviour
 
         if (checkoutButton.image != null) checkoutButton.image.color = Color.red;
 
-        // Play Alert Sound
         if (SisterReactionController.Instance != null)
         {
             SisterReactionController.Instance.TriggerAlert();
@@ -157,7 +159,6 @@ public class Scene1Manager : MonoBehaviour
         while (isGameActive)
         {
             checkoutButton.interactable = true;
-
             checkoutButton.image.color = redColor;
             yield return new WaitForSeconds(0.5f);
             checkoutButton.image.color = lightRedColor;
@@ -168,24 +169,20 @@ public class Scene1Manager : MonoBehaviour
     public void OnCheckoutClicked()
     {
         if (!isGameActive) return;
-        isGameActive = false;
 
+        // Play Checkout Sound
+        if (sfxSource != null && checkoutSound != null)
+        {
+            sfxSource.PlayOneShot(checkoutSound);
+        }
+
+        isGameActive = false;
         StopAllCoroutines();
-        // Also stop the beeping sound if checkout happens
+
         if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
 
+        // Just open the panel. The EndScreenManager script on it will handle the rest.
         levelCompletePanel.SetActive(true);
-
-        if (SurvivalMeter.Instance != null)
-        {
-            int hp = SurvivalMeter.Instance.currentHP;
-            int daysSurvived = (hp / 20) + 1;
-            summaryText.text = $"You secured {currentItems} items.\nMorale: {hp}%\n\nBased on your supplies,\nyou can survive for {daysSurvived} days.";
-        }
-        else
-        {
-            summaryText.text = $"You secured {currentItems} items.\n\nGood luck surviving the storm.";
-        }
     }
 
     public void TriggerGameOver(string reason)
@@ -193,9 +190,7 @@ public class Scene1Manager : MonoBehaviour
         if (!isGameActive) return;
         isGameActive = false;
 
-        // Stop beep sound on game over
         if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
-
         if (UIShake.Instance != null) UIShake.Instance.ShakeGameOver();
 
         StartCoroutine(GameOverSequence(reason));

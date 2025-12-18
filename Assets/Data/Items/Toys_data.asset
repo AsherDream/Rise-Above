@@ -18,4 +18,8 @@ MonoBehaviour:
     the soul.
   itemType: 1
   impactValue: 5
+  educationalTip: Emotional support. While important for morale, soft toys absorb
+    floodwater and become <color=red>breeding grounds for mold</color>. If you must
+    take one, ensure it is small and sealed in a plastic bag.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 4ff2de250ed3b5844b68069e2d43eb96, type: 2}

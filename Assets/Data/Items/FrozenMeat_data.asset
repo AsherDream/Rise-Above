@@ -18,4 +18,8 @@ MonoBehaviour:
     to find out...
   itemType: 2
   impactValue: 15
+  educationalTip: Dangerous liability. Without a freezer, raw meat thaws quickly
+    and leaks bacteria, <color=red>contaminating everything else</color> in your
+    bag.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 79f49b8d454436244b7e3d78b5cf0156, type: 2}

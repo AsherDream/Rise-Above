@@ -18,4 +18,7 @@ MonoBehaviour:
     need it.
   itemType: 0
   impactValue: 15
+  educationalTip: Critical choice. Flood waters hide bacteria and sharp debris. Immediate
+    treatment prevents small cuts from becoming <color=red>life-threatening infections</color>.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 2a73400790b28d5449bbf99c82e74d65, type: 2}

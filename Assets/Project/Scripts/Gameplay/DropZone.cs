@@ -2,8 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
-using System.Collections.Generic;
-using DG.Tweening; // REQUIRED: Make sure DOTween is imported
+using DG.Tweening;
 
 [RequireComponent(typeof(Image))]
 public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
@@ -26,15 +25,32 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     public float rotationJitter = 45f;
 
     [Title("Toss Animation Settings")]
-    public float tossJumpPower = 100f; // How high the arc goes
-    public float tossDuration = 0.4f;  // How long the flight takes
+    public float tossJumpPower = 100f;
+    public float tossDuration = 0.4f;
 
+    [Title("Pacing Constraint")]
+    [InfoBox("Time in seconds player must wait between drops.")]
+    public float minDropInterval = 0.8f;
+
+    // --- NEW: AUDIO SETTINGS ---
+    [Title("Audio")]
+    public AudioSource dropAudioSource;
+    public AudioClip dropSound;
+    // ---------------------------
+
+    private float lastDropTime = -999f;
     private DraggableItem currentlyHoveringItem = null;
     private int itemsInCartCount = 0;
     private float currentPileX;
     private float currentPileY;
 
-    private void Awake() { InitializePileCursor(); }
+    private void Awake()
+    {
+        InitializePileCursor();
+
+        // Auto-fetch AudioSource if not assigned, but it's better to assign manually
+        if (dropAudioSource == null) dropAudioSource = GetComponent<AudioSource>();
+    }
 
     private void InitializePileCursor()
     {
@@ -73,57 +89,66 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     public void OnDrop(PointerEventData eventData)
     {
         bool isCartFull = itemsInCartCount >= maxCartCapacity;
+
+        // REMOVED INCORRECT CALL HERE - draggable is not defined yet
+
         if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
 
-        if (isCartFull)
+        bool isSpamming = (Time.time - lastDropTime < minDropInterval);
+
+        if (isCartFull || isSpamming)
         {
-            if (currentlyHoveringItem) currentlyHoveringItem.ResetToDefaultColor();
+            DraggableItem dragging = eventData.pointerDrag.GetComponent<DraggableItem>();
+            if (dragging) dragging.ResetToDefaultColor();
             currentlyHoveringItem = null;
 
-            // JUICE: Shake the cart to say "NO!"
             transform.DOShakePosition(0.3f, 10f, 20, 90f).SetUpdate(true);
+
+            if (isSpamming && SisterReactionController.Instance != null)
+            {
+                SisterReactionController.Instance.TriggerAlert();
+            }
             return;
         }
 
-        DraggableItem draggable = eventData.pointerDrag.GetComponent<DraggableItem>();
+        DraggableItem draggable = eventData.pointerDrag.GetComponent<DraggableItem>(); // draggable is defined here
 
         if (draggable != null)
         {
+            lastDropTime = Time.time;
             draggable.isDropSuccessful = true;
 
-            // --- UPDATE START: Capture the drop position ---
-            // We need to know where the item was in world space right when let go
+            // --- NEW: PLAY SOUND ---
+            if (dropAudioSource != null && dropSound != null)
+            {
+                // Pitch variation makes it sound more natural
+                dropAudioSource.pitch = Random.Range(0.9f, 1.1f);
+                dropAudioSource.PlayOneShot(dropSound);
+            }
+            // -----------------------
+
             Vector3 startDropPos = draggable.transform.position;
-
-            // 1. Place the item visually (triggering the toss animation)
             GameObject droppedVisual = PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor, startDropPos);
-            // --- UPDATE END ---
 
-            // JUICE: Squash the cart slightly to feel the weight of it landing
-            // Delayed slightly to sync with the item landing in the cart
             transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1).SetDelay(tossDuration * 0.8f).SetUpdate(true);
 
-            // 2. Trigger Logic (Dialogue + Survival Meter + MESS)
             RunItemLogic(draggable);
 
-            // 3. Update Counts
             itemsInCartCount++;
 
-            // 4. Tell Scene1Manager
             if (Scene1Manager.Instance != null)
             {
-                Scene1Manager.Instance.OnItemCollected();
+                // CORRECTED CALL: Now inside the block where draggable is defined
+                Scene1Manager.Instance.OnItemCollected(draggable.itemData);
             }
         }
         currentlyHoveringItem = null;
     }
 
-    // --- UPDATED METHOD SIGNATURE AND LOGIC ---
     private GameObject PlaceItemInPile(Sprite itemSprite, Color itemColor, Vector3 startWorldPos)
     {
         if (cartContentParent == null || cartItemPrefab == null) return null;
 
-        // 1. Create the new item
         GameObject newItemGO = Instantiate(cartItemPrefab, cartContentParent);
         Image newItemImage = newItemGO.GetComponent<Image>();
         RectTransform itemRect = newItemGO.GetComponent<RectTransform>();
@@ -132,10 +157,8 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
         newItemImage.sprite = itemSprite;
         newItemImage.color = itemColor;
-        // Ensure it starts full scale
         itemRect.localScale = Vector3.one;
 
-        // 2. Calculate the Target Position (where it belongs in the pile)
         float itemWidth = itemRect.rect.width * itemRect.localScale.x;
 
         if (currentPileX + itemWidth > rightBorder.anchoredPosition.x && currentPileX != leftBorder.anchoredPosition.x)
@@ -151,31 +174,21 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
         Vector2 targetAnchoredPos = new Vector2(baseXPos + xJitter, baseYPos + yJitter);
 
-        // Clamp to borders
         float halfWidth = itemWidth / 2f;
         targetAnchoredPos.x = Mathf.Clamp(targetAnchoredPos.x, leftBorder.anchoredPosition.x + halfWidth, rightBorder.anchoredPosition.x - halfWidth);
 
-        // UPDATE CURSOR for next item
         currentPileX += itemWidth;
 
-        // --- TOSS ANIMATION LOGIC ---
-
-        // 3. Set Initial Position: Convert the world drop point to local space relative to the cart container
         Vector2 localStartPos;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(cartContentParent, Input.mousePosition, null, out localStartPos);
         itemRect.anchoredPosition = localStartPos;
 
-        // 4. Animate: Jump from mouse position to target pile position
         Sequence tossSequence = DOTween.Sequence();
-
-        // The Arc (Jump)
         tossSequence.Append(itemRect.DOJumpAnchorPos(targetAnchoredPos, tossJumpPower, 1, tossDuration).SetEase(Ease.OutQuad));
 
-        // The Spin (Rotate while flying)
         float randomRotation = Random.Range(-rotationJitter, rotationJitter);
         tossSequence.Join(itemRect.DORotate(new Vector3(0, 0, randomRotation), tossDuration, RotateMode.FastBeyond360));
 
-        // Ensure it plays even if paused (optional, depending on your design preference)
         tossSequence.SetUpdate(true);
 
         return newItemGO;
@@ -185,13 +198,11 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     {
         if (draggable.itemData == null) return;
 
-        // 1. Dialogue
         if (draggable.itemData.sisterReaction != null)
         {
             DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
         }
 
-        // 2. Logic & Shake & Mess
         if (SurvivalMeter.Instance != null)
         {
             switch (draggable.itemData.itemType)
@@ -218,13 +229,11 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                     if (LightFlickerController.Instance != null)
                         LightFlickerController.Instance.OnGridDamaged(0.1f);
 
-                    // --- Trigger Mess with Type ---
                     if (CleanupManager.Instance != null)
                     {
                         string itemName = draggable.itemData.itemName.ToLower();
                         if (itemName.Contains("milk") || itemName.Contains("egg"))
                         {
-                            // Pass the name ("milk" or "egg") to choose texture
                             CleanupManager.Instance.TriggerMess(itemName);
                         }
                     }

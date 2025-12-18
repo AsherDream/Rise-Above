@@ -18,4 +18,7 @@ MonoBehaviour:
     in taste.
   itemType: 0
   impactValue: 12
+  educationalTip: Excellent. Canned protein is shelf-stable, waterproof, and <color=green>requires
+    no cooking</color>. Perfect when gas and electric are cut.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 57a039f9925af354ab01be5c1bbb4ab5, type: 2}

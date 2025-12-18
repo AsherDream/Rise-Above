@@ -25,15 +25,19 @@ public class CleanupManager : MonoBehaviour
 
     [Title("Audio")]
     public AudioSource audioSource;
-    public AudioClip splatSound;
     public AudioClip scrubSound;
+
+    [Title("Mess Specific Sounds")] // --- NEW SECTION ---
+    public AudioClip milkSplatSound;
+    public AudioClip eggSplatSound;
+    // ---------------------------------------------------
 
     [Title("Debug")]
     public RectTransform debugCursor;
 
     private Texture2D dirtMaskTexture;
-    private Color32[] texturePixels; // The target texture pixels
-    private byte[] brushAlphaPixels; // OPTIMIZATION: Cache brush alpha as bytes
+    private Color32[] texturePixels;
+    private byte[] brushAlphaPixels;
     private int cachedBrushWidth;
     private int cachedBrushHeight;
 
@@ -42,7 +46,6 @@ public class CleanupManager : MonoBehaviour
     private float dirtAmount;
     private Camera uiCamera;
 
-    // Track previous positions
     private Vector2Int lastPixelPos;
     private bool hasLastPos = false;
 
@@ -56,7 +59,6 @@ public class CleanupManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
-        // Pre-cache the brush texture to avoid GetPixel in Update loop
         CacheBrushPixels();
 
         if (splatterCanvasGroup != null)
@@ -73,7 +75,6 @@ public class CleanupManager : MonoBehaviour
         }
     }
 
-    // Optimization: Cache brush pixels into a simple byte array (0-255)
     private void CacheBrushPixels()
     {
         if (dirtBrush == null) return;
@@ -121,9 +122,7 @@ public class CleanupManager : MonoBehaviour
 
                 if (pixelsChanged)
                 {
-                    // Update the texture
                     dirtMaskTexture.SetPixels32(texturePixels);
-                    // OPTIMIZATION: Apply(false) prevents mipmap generation (slow and unneeded for UI)
                     dirtMaskTexture.Apply(false);
 
                     if (audioSource != null && scrubSound != null && !audioSource.isPlaying)
@@ -146,7 +145,6 @@ public class CleanupManager : MonoBehaviour
     {
         bool changed = false;
         float distance = Vector2.Distance(new Vector2(x0, y0), new Vector2(x1, y1));
-        // Optimization: Don't step perfectly every pixel, step by 25% of brush size is enough coverage
         float stepSize = Mathf.Max(1f, brushSize * brushScale * 0.25f);
         int steps = Mathf.CeilToInt(distance / stepSize);
 
@@ -169,14 +167,12 @@ public class CleanupManager : MonoBehaviour
         int startX = pixelX - (brushW / 2);
         int startY = pixelY - (brushH / 2);
 
-        // OPTIMIZATION: Calculate loop bounds beforehand to avoid "if" checks inside the loop
         int endX = startX + brushW;
         int endY = startY + brushH;
 
         int texWidth = dirtMaskTexture.width;
         int texHeight = dirtMaskTexture.height;
 
-        // Clamp to texture boundaries
         int loopStartX = Mathf.Max(0, startX);
         int loopStartY = Mathf.Max(0, startY);
         int loopEndX = Mathf.Min(texWidth, endX);
@@ -186,22 +182,16 @@ public class CleanupManager : MonoBehaviour
 
         for (int y = loopStartY; y < loopEndY; y++)
         {
-            // Pre-calculate row index for the target texture
             int targetRowIndex = y * texWidth;
-
-            // Map 'y' back to brush coordinate space
             int brushY = (int)(((y - startY) / (float)brushH) * cachedBrushHeight);
             int brushRowIndex = brushY * cachedBrushWidth;
 
             for (int x = loopStartX; x < loopEndX; x++)
             {
-                // Map 'x' back to brush coordinate space
                 int brushX = (int)(((x - startX) / (float)brushW) * cachedBrushWidth);
-
-                // Get cached alpha (No GetPixel calls!)
                 byte alpha = brushAlphaPixels[brushRowIndex + brushX];
 
-                if (alpha > 25) // Threshold
+                if (alpha > 25)
                 {
                     int index = targetRowIndex + x;
                     if (texturePixels[index].a != 0)
@@ -221,42 +211,51 @@ public class CleanupManager : MonoBehaviour
     {
         if (splatterCanvasGroup == null || splatterRawImage == null) return;
 
+        // --- NEW LOGIC: Choose Sound & Texture based on type ---
         Texture2D sourceTex = milkTexture;
-        if (messType.ToLower().Contains("egg") && eggTexture != null) sourceTex = eggTexture;
+        AudioClip soundToPlay = milkSplatSound; // Default to milk
+
+        if (messType.ToLower().Contains("egg"))
+        {
+            if (eggTexture != null) sourceTex = eggTexture;
+            if (eggSplatSound != null) soundToPlay = eggSplatSound;
+        }
+        else
+        {
+            // Default/Milk fallback
+            if (milkTexture != null) sourceTex = milkTexture;
+            if (milkSplatSound != null) soundToPlay = milkSplatSound;
+        }
+        // -------------------------------------------------------
 
         if (sourceTex == null) return;
 
-        // OPTIMIZATION: Prevent Memory Leak
-        // If we generated a texture before, destroy it to free VRAM
         if (dirtMaskTexture != null) Destroy(dirtMaskTexture);
 
-        // Create new texture
         dirtMaskTexture = new Texture2D(sourceTex.width, sourceTex.height, TextureFormat.RGBA32, false);
 
-        // Copy pixels
         texturePixels = sourceTex.GetPixels32();
         dirtMaskTexture.SetPixels32(texturePixels);
-        dirtMaskTexture.Apply(false); // No mipmaps
+        dirtMaskTexture.Apply(false);
 
         splatterRawImage.texture = dirtMaskTexture;
 
-        // Calculate dirt amount
         dirtAmount = 0;
-        // Fast iteration
         for (int i = 0; i < texturePixels.Length; i++)
         {
             if (texturePixels[i].a > 10) dirtAmount++;
         }
         dirtAmountTotal = dirtAmount;
 
-        // Show UI
         splatterCanvasGroup.gameObject.SetActive(true);
         splatterCanvasGroup.alpha = 1f;
         splatterCanvasGroup.blocksRaycasts = true;
         isCleaning = true;
         hasLastPos = false;
 
-        if (audioSource != null && splatSound != null) audioSource.PlayOneShot(splatSound);
+        // --- PLAY SELECTED SOUND ---
+        if (audioSource != null && soundToPlay != null) audioSource.PlayOneShot(soundToPlay);
+
         if (DialogueManager.Instance != null) DialogueManager.Instance.ForcePortrait(SisterMood.Complain);
     }
 
@@ -273,7 +272,6 @@ public class CleanupManager : MonoBehaviour
             splatterCanvasGroup.blocksRaycasts = false;
             splatterCanvasGroup.gameObject.SetActive(false);
 
-            // Cleanup texture memory when finished
             if (dirtMaskTexture != null)
             {
                 Destroy(dirtMaskTexture);

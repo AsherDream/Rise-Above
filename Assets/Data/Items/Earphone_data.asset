@@ -18,4 +18,7 @@ MonoBehaviour:
     still hear danger coming!
   itemType: 1
   impactValue: 8
+  educationalTip: Risky distraction. You need to hear emergency broadcasts and environmental
+    dangers (like rushing water), <color=red>not music</color>.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 07a16522a0d349d4683091881d817efa, type: 2}

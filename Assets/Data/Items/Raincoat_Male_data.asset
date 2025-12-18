@@ -18,4 +18,7 @@ MonoBehaviour:
     the job. Stay dry, stay alive.
   itemType: 0
   impactValue: 10
+  educationalTip: Correct. Wet clothes lose body heat 25x faster than dry ones. Staying
+    dry is crucial to <color=green>avoid hypothermia</color>.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: e273cdf420cc22240974ba23dccd2e09, type: 2}

@@ -18,4 +18,7 @@ MonoBehaviour:
     yogurt.
   itemType: 2
   impactValue: 15
+  educationalTip: Poor choice. Dairy spoils within 4 hours without power. Consuming
+    it risks <color=red>severe food poisoning</color> when doctors aren't available.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 79f49b8d454436244b7e3d78b5cf0156, type: 2}

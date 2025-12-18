@@ -18,4 +18,7 @@ MonoBehaviour:
     keep moving forward.
   itemType: 0
   impactValue: 10
+  educationalTip: Correct. Wet clothes lose body heat 25x faster than dry ones. Staying
+    dry is crucial to <color=green>avoid hypothermia</color>.
+  sisterFeedbackSprite: {fileID: 0}
   sisterReaction: {fileID: 11400000, guid: 8fc4e55108d359246bb5d079a74cb8e3, type: 2}
