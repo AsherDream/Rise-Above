@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Sirenix.OdinInspector;
 using System.Collections;
-using System.Collections.Generic; // REQUIRED for List
+using System.Collections.Generic;
 
 public class Scene1Manager : MonoBehaviour
 {
@@ -26,18 +26,18 @@ public class Scene1Manager : MonoBehaviour
     [Title("UI References")]
     [Required] public TextMeshProUGUI timerText;
     [Required] public Button checkoutButton;
-    [Required] public GameObject gameOverPanel;
-    [Required] public TextMeshProUGUI gameOverReasonText;
     [Required] public GameObject levelCompletePanel;
 
-    // REMOVED: summaryText (EndScreenManager handles this now)
+    // --- GAME OVER & THANKS (Fixed) ---
+    [Title("Game Over & Transitions")]
+    [Required] public GameObject gameOverPanel;
+    [Required] public TextMeshProUGUI gameOverReasonText; // <--- This was missing!
+    [Required] public GameObject specialThanksPanel;
+    // ----------------------------------
 
-    // --- TRACKING LIST FOR END SCREEN ---
     [ReadOnly]
     public List<InspectableItemData> collectedItemsList = new List<InspectableItemData>();
-    // ------------------------------------
 
-    // Internal State
     [Title("Debug Info")]
     [ReadOnly] public float currentTime;
     [ReadOnly] public int currentItems;
@@ -55,17 +55,16 @@ public class Scene1Manager : MonoBehaviour
     {
         currentTime = levelTimeInSeconds;
         currentItems = 0;
-
-        // Clear the list when level starts
         collectedItemsList.Clear();
-
         isGameActive = true;
         hasBeeped = false;
 
         if (timerText != null) defaultTimerColor = timerText.color;
 
-        gameOverPanel.SetActive(false);
-        levelCompletePanel.SetActive(false);
+        // Hide all panels at start
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
+        if (specialThanksPanel != null) specialThanksPanel.SetActive(false);
 
         checkoutButton.interactable = false;
         if (checkoutButton.image != null) checkoutButton.image.color = Color.gray;
@@ -96,9 +95,7 @@ public class Scene1Manager : MonoBehaviour
     {
         hasBeeped = true;
         if (timerAudioSource != null && beepSound != null)
-        {
             timerAudioSource.PlayOneShot(beepSound);
-        }
     }
 
     private void UpdateTimerUI()
@@ -114,45 +111,26 @@ public class Scene1Manager : MonoBehaviour
         }
     }
 
-    // --- Captures the Item Data ---
     public void OnItemCollected(InspectableItemData itemData)
     {
-        // Add the item to our list so the End Screen can display it later
         if (itemData != null) collectedItemsList.Add(itemData);
-
         currentItems++;
-        Debug.Log($"[Scene1Manager] Items: {currentItems}/{targetItemCount}");
-
-        if (currentItems >= targetItemCount)
-        {
-            EnableCheckout();
-        }
+        if (currentItems >= targetItemCount) EnableCheckout();
     }
 
-    public bool IsCartFull()
-    {
-        return currentItems >= targetItemCount;
-    }
+    public bool IsCartFull() { return currentItems >= targetItemCount; }
 
     private void EnableCheckout()
     {
-        Debug.Log("[Scene1Manager] Cart Full! Checkout enabled.");
         checkoutButton.interactable = true;
-
         if (checkoutButton.image != null) checkoutButton.image.color = Color.red;
-
-        if (SisterReactionController.Instance != null)
-        {
-            SisterReactionController.Instance.TriggerAlert();
-        }
-
+        if (SisterReactionController.Instance != null) SisterReactionController.Instance.TriggerAlert();
         StartCoroutine(FlashCheckoutButton());
     }
 
     private IEnumerator FlashCheckoutButton()
     {
         if (checkoutButton.image == null) yield break;
-
         Color redColor = new Color(1f, 0.2f, 0.2f);
         Color lightRedColor = new Color(1f, 0.6f, 0.6f);
 
@@ -169,19 +147,12 @@ public class Scene1Manager : MonoBehaviour
     public void OnCheckoutClicked()
     {
         if (!isGameActive) return;
-
-        // Play Checkout Sound
-        if (sfxSource != null && checkoutSound != null)
-        {
-            sfxSource.PlayOneShot(checkoutSound);
-        }
-
+        if (sfxSource != null && checkoutSound != null) sfxSource.PlayOneShot(checkoutSound);
+        
         isGameActive = false;
         StopAllCoroutines();
-
         if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
-
-        // Just open the panel. The EndScreenManager script on it will handle the rest.
+        
         levelCompletePanel.SetActive(true);
     }
 
@@ -189,7 +160,6 @@ public class Scene1Manager : MonoBehaviour
     {
         if (!isGameActive) return;
         isGameActive = false;
-
         if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
         if (UIShake.Instance != null) UIShake.Instance.ShakeGameOver();
 
@@ -199,12 +169,12 @@ public class Scene1Manager : MonoBehaviour
     private IEnumerator GameOverSequence(string reason)
     {
         yield return new WaitForSeconds(1.0f);
-
         gameOverPanel.SetActive(true);
         if (gameOverReasonText != null) gameOverReasonText.text = reason;
-
         Time.timeScale = 0f;
     }
+
+    // --- TRANSITION FUNCTIONS ---
 
     public void RetryLevel()
     {
@@ -216,5 +186,12 @@ public class Scene1Manager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
+    }
+
+    public void GoToSpecialThanks()
+    {
+        if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (specialThanksPanel != null) specialThanksPanel.SetActive(true);
     }
 }
