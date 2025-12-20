@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: ProteinBar_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: 1207441461819430515, guid: c8d08e0632d581541a5342fd9ce30619, type: 3}
   itemName: Protein Bar
   itemDescription: Dense energy bricks. Tastes like sawdust and chocolate, but it'll
     keep you moving.

@@ -2183,7 +2183,7 @@ MonoBehaviour:
   scrubSound: {fileID: 8300000, guid: b1879bfe19b7e4640841d1d0dfcec105, type: 3}
   milkSplatSound: {fileID: 8300000, guid: a32403ff25be21b45b48968237413c62, type: 3}
   eggSplatSound: {fileID: 8300000, guid: cbb2fefb83dcb3e48b6755cd594c22af, type: 3}
-  debugCursor: {fileID: 1585375098}
+  cleaningToolCursor: {fileID: 1585375098}
 --- !u!4 &409638096
 Transform:
   m_ObjectHideFlags: 0
@@ -8766,7 +8766,7 @@ GameObject:
   - component: {fileID: 1585375100}
   - component: {fileID: 1585375099}
   m_Layer: 5
-  m_Name: Debug Cursor
+  m_Name: Cleaning Tool
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8804,14 +8804,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9547169, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 7562490176786473741, guid: 09a05170f054444499464c0ae0eacd76, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9660,7 +9660,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 252444c2ce5301542b2af7bc86d7d983, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Scene1Manager
-  levelTimeInSeconds: 10
+  levelTimeInSeconds: 60
   targetItemCount: 9
   beepStartTime: 10
   timerAudioSource: {fileID: 1847749900}

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Noodles_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 0}
+  itemSprite: {fileID: 21300000, guid: 9800e9c9135b00d4187a1339f05d7d9c, type: 3}
   itemName: Noodles
   itemDescription: Instant comfort in a cup. Just add hot water and hope for the
     best. A true survival staple.

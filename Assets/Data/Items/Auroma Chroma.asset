@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
+  m_Name: Auroma Chroma
+  m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
+  itemSprite: {fileID: -902149200801415328, guid: ea4bff240e096d94f993471b41ca766a, type: 3}
+  itemName: Auroma Chroma
+  itemDescription: Full of nostalgia, but it breaks faster than you think. Play gently!
+  itemType: 1
+  impactValue: 15
+  educationalTip: Emotional comfort vs. physical burden. Consoles <color=red>require
+    power you won't have</color>. A simple deck of cards is lighter and reusable.
+  sisterFeedbackSprite: {fileID: 0}
+  sisterReaction: {fileID: 11400000, guid: ad1f978d61dbf9447a5bfc790b8278f5, type: 2}
