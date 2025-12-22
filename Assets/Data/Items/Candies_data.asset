@@ -17,8 +17,8 @@ MonoBehaviour:
   itemDescription: A quick sugar rush for low morale. Good for trading, bad for your
     teeth
   itemType: 2
-  impactValue: 5
+  impactValue: 15
   educationalTip: Empty calories. They provide a quick morale boost, but lead to
     an energy-sapping <color=red>sugar crash</color> later when you need strength
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: 5abc47dc618b0f543a76f2a26354e650, type: 3}
   sisterReaction: {fileID: 11400000, guid: 32f1272c34a347e428e64e084708fcb4, type: 2}

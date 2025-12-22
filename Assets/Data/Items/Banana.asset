@@ -17,8 +17,8 @@ MonoBehaviour:
   itemDescription: Nature's candy. Full of vitamins, but they rot faster than you
     think. Eat quickly!
   itemType: 2
-  impactValue: 8
+  impactValue: 15
   educationalTip: Fragile and perishable. Soft fruits bruise easily in a packed bag
     and <color=red>rot quickly</color>. Dried or canned fruit is standard.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: 5abc47dc618b0f543a76f2a26354e650, type: 3}
   sisterReaction: {fileID: 11400000, guid: 1e3f11b5152532b4aa3ea6d224dd9dc5, type: 2}

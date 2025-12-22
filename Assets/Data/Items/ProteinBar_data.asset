@@ -17,8 +17,8 @@ MonoBehaviour:
   itemDescription: Dense energy bricks. Tastes like sawdust and chocolate, but it'll
     keep you moving.
   itemType: 0
-  impactValue: 10
+  impactValue: 25
   educationalTip: Great pick. Energy-dense, lightweight, and zero prep. In a high-stress
     crisis, <color=green>easy calories</color> are vital for sustaining energy.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: d155b144623eb25469e4159325947a76, type: 3}
   sisterReaction: {fileID: 11400000, guid: 7a902a760af892341993511409d87ae4, type: 2}

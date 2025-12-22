@@ -17,9 +17,9 @@ MonoBehaviour:
   itemDescription: A pack of sweet, bright red berries. They are delicious and make
     you feel happy, but they will rot very quickly if you don't eat them soon.
   itemType: 2
-  impactValue: 8
+  impactValue: 15
   educationalTip: Fresh berries are tasty and healthy, but they spoil in just a few
     days. In a survival situation, eat your fresh food immediately and save the canned
     food for later since it lasts much longer.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: 5abc47dc618b0f543a76f2a26354e650, type: 3}
   sisterReaction: {fileID: 11400000, guid: 1e3f11b5152532b4aa3ea6d224dd9dc5, type: 2}

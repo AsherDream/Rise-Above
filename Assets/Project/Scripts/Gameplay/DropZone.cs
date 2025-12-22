@@ -32,11 +32,9 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     [InfoBox("Time in seconds player must wait between drops.")]
     public float minDropInterval = 0.8f;
 
-    // --- NEW: AUDIO SETTINGS ---
     [Title("Audio")]
     public AudioSource dropAudioSource;
     public AudioClip dropSound;
-    // ---------------------------
 
     private float lastDropTime = -999f;
     private DraggableItem currentlyHoveringItem = null;
@@ -47,8 +45,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     private void Awake()
     {
         InitializePileCursor();
-
-        // Auto-fetch AudioSource if not assigned, but it's better to assign manually
         if (dropAudioSource == null) dropAudioSource = GetComponent<AudioSource>();
     }
 
@@ -88,47 +84,61 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
     public void OnDrop(PointerEventData eventData)
     {
+        DraggableItem draggable = eventData.pointerDrag.GetComponent<DraggableItem>();
+
+        // 1. Initial Checks (Cart Full, Spamming, etc.)
         bool isCartFull = itemsInCartCount >= maxCartCapacity;
-
-        // REMOVED INCORRECT CALL HERE - draggable is not defined yet
-
         if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
-
         bool isSpamming = (Time.time - lastDropTime < minDropInterval);
 
-        if (isCartFull || isSpamming)
+        // --- NEW: CHECK FOR DUPLICATES ---
+        bool isDuplicate = false;
+        if (Scene1Manager.Instance != null && draggable != null && draggable.itemData != null)
         {
-            DraggableItem dragging = eventData.pointerDrag.GetComponent<DraggableItem>();
-            if (dragging) dragging.ResetToDefaultColor();
+            if (Scene1Manager.Instance.IsItemAlreadyInCart(draggable.itemData))
+            {
+                isDuplicate = true;
+            }
+        }
+        // ---------------------------------
+
+        // If ANY block condition is met, reject the drop
+        if (isCartFull || isSpamming || isDuplicate)
+        {
+            if (draggable) draggable.ResetToDefaultColor();
             currentlyHoveringItem = null;
 
+            // Visual Shake "No!"
             transform.DOShakePosition(0.3f, 10f, 20, 90f).SetUpdate(true);
 
-            if (isSpamming && SisterReactionController.Instance != null)
+            // Handle Specific Rejections
+            if (isDuplicate)
+            {
+                // Trigger Sister's Duplicate Complaint
+                if (SisterReactionController.Instance != null)
+                    SisterReactionController.Instance.TriggerDuplicateReaction();
+            }
+            else if (isSpamming && SisterReactionController.Instance != null)
             {
                 SisterReactionController.Instance.TriggerAlert();
             }
             return;
         }
 
-        DraggableItem draggable = eventData.pointerDrag.GetComponent<DraggableItem>(); // draggable is defined here
-
+        // --- SUCCESSFUL DROP ---
         if (draggable != null)
         {
             lastDropTime = Time.time;
             draggable.isDropSuccessful = true;
 
-            // --- NEW: PLAY SOUND ---
             if (dropAudioSource != null && dropSound != null)
             {
-                // Pitch variation makes it sound more natural
                 dropAudioSource.pitch = Random.Range(0.9f, 1.1f);
                 dropAudioSource.PlayOneShot(dropSound);
             }
-            // -----------------------
 
             Vector3 startDropPos = draggable.transform.position;
-            GameObject droppedVisual = PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor, startDropPos);
+            PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor, startDropPos);
 
             transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1).SetDelay(tossDuration * 0.8f).SetUpdate(true);
 
@@ -138,7 +148,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
             if (Scene1Manager.Instance != null)
             {
-                // CORRECTED CALL: Now inside the block where draggable is defined
                 Scene1Manager.Instance.OnItemCollected(draggable.itemData);
             }
         }
@@ -198,11 +207,13 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     {
         if (draggable.itemData == null) return;
 
+        // 1. Trigger Sister Dialogue
         if (draggable.itemData.sisterReaction != null)
         {
             DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
         }
 
+        // 2. Handle Stats (HP/Morale/Shakes)
         if (SurvivalMeter.Instance != null)
         {
             switch (draggable.itemData.itemType)
@@ -228,17 +239,16 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
                     if (LightFlickerController.Instance != null)
                         LightFlickerController.Instance.OnGridDamaged(0.1f);
-
-                    if (CleanupManager.Instance != null)
-                    {
-                        string itemName = draggable.itemData.itemName.ToLower();
-                        if (itemName.Contains("milk") || itemName.Contains("egg"))
-                        {
-                            CleanupManager.Instance.TriggerMess(itemName);
-                        }
-                    }
                     break;
             }
+        }
+
+        // 3. Handle Mess (MOVED OUTSIDE SWITCH)
+        // Now, ANY item (Burden or Wasteful) will trigger the minigame if it has a texture assigned.
+        if (CleanupManager.Instance != null)
+        {
+            // The Manager already checks if messTexture is null, so this is safe to call for every item.
+            CleanupManager.Instance.TriggerMess(draggable.itemData);
         }
     }
 }

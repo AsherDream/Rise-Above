@@ -17,9 +17,9 @@ MonoBehaviour:
   itemDescription: Soft, multi-ply comfort. Essential for hygiene, but you can't
     eat it, and it takes up a huge amount of space.
   itemType: 1
-  impactValue: 15
+  impactValue: 40
   educationalTip: Staying clean is good, but staying alive is better. Big packs of
     toilet paper take up valuable space in your bag. Always prioritize food, water,
     and first aid over bulky comfort items.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: 5abc47dc618b0f543a76f2a26354e650, type: 3}
   sisterReaction: {fileID: 11400000, guid: 1cce7900ccd88fb4eba467775dd7d3d6, type: 2}

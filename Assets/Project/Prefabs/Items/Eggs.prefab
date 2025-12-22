@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 4280402358149078469}
   m_Layer: 5
   m_Name: Eggs
-  m_TagString: Good_Item
+  m_TagString: Bad_Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

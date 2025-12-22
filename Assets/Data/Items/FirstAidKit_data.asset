@@ -17,8 +17,8 @@ MonoBehaviour:
   itemDescription: For cuts, scrapes, and bad decisions. Better to have it and not
     need it.
   itemType: 0
-  impactValue: 15
+  impactValue: 45
   educationalTip: Critical choice. Flood waters hide bacteria and sharp debris. Immediate
     treatment prevents small cuts from becoming <color=red>life-threatening infections</color>.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: d155b144623eb25469e4159325947a76, type: 3}
   sisterReaction: {fileID: 11400000, guid: 2a73400790b28d5449bbf99c82e74d65, type: 2}

@@ -10,15 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
-  m_Name: Eggs_data
+  m_Name: Egg_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
   itemSprite: {fileID: -4072622106568590741, guid: 50e5fc06306124a4a992d0bed2eb78c6, type: 3}
   itemName: Eggs
   itemDescription: Fragile protein bombs. Great if you can cook them, messy if you
     trip.
-  itemType: 2
-  impactValue: 10
+  itemType: 1
+  impactValue: 15
+  messTexture: {fileID: 2800000, guid: 99ad3ecb072b2ec4c8726527623bf658, type: 3}
+  messSound: {fileID: 8300000, guid: cbb2fefb83dcb3e48b6755cd594c22af, type: 3}
   educationalTip: Too fragile. Raw eggs break easily under pressure, creating a mess
     that ruins other supplies and <color=red>attracts pests</color>.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: 2d4b3a385780a544dac4e93a541c94d0, type: 3}
   sisterReaction: {fileID: 11400000, guid: 163a82d189a19bf4f9257827c814de8b, type: 2}

@@ -28,12 +28,10 @@ public class Scene1Manager : MonoBehaviour
     [Required] public Button checkoutButton;
     [Required] public GameObject levelCompletePanel;
 
-    // --- GAME OVER & THANKS (Fixed) ---
     [Title("Game Over & Transitions")]
     [Required] public GameObject gameOverPanel;
-    [Required] public TextMeshProUGUI gameOverReasonText; // <--- This was missing!
+    [Required] public TextMeshProUGUI gameOverReasonText;
     [Required] public GameObject specialThanksPanel;
-    // ----------------------------------
 
     [ReadOnly]
     public List<InspectableItemData> collectedItemsList = new List<InspectableItemData>();
@@ -61,7 +59,6 @@ public class Scene1Manager : MonoBehaviour
 
         if (timerText != null) defaultTimerColor = timerText.color;
 
-        // Hide all panels at start
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
         if (specialThanksPanel != null) specialThanksPanel.SetActive(false);
@@ -80,22 +77,15 @@ public class Scene1Manager : MonoBehaviour
         currentTime -= Time.deltaTime;
         UpdateTimerUI();
 
-        if (currentTime <= beepStartTime && !hasBeeped && currentTime > 0)
-        {
-            PlayTimerBeep();
-        }
+        if (currentTime <= beepStartTime && !hasBeeped && currentTime > 0) PlayTimerBeep();
 
-        if (currentTime <= 0)
-        {
-            TriggerGameOver("The storm arrived before you finished.");
-        }
+        if (currentTime <= 0) TriggerGameOver("The storm arrived before you finished.");
     }
 
     private void PlayTimerBeep()
     {
         hasBeeped = true;
-        if (timerAudioSource != null && beepSound != null)
-            timerAudioSource.PlayOneShot(beepSound);
+        if (timerAudioSource != null && beepSound != null) timerAudioSource.PlayOneShot(beepSound);
     }
 
     private void UpdateTimerUI()
@@ -105,11 +95,27 @@ public class Scene1Manager : MonoBehaviour
             float minutes = Mathf.FloorToInt(currentTime / 60);
             float seconds = Mathf.FloorToInt(currentTime % 60);
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-
             if (currentTime <= 30f) timerText.color = Color.red;
             else timerText.color = defaultTimerColor;
         }
     }
+
+    // --- NEW: Check for Duplicates ---
+    public bool IsItemAlreadyInCart(InspectableItemData itemToCheck)
+    {
+        if (itemToCheck == null) return false;
+
+        // Check our list to see if the item name already exists
+        foreach (var collectedItem in collectedItemsList)
+        {
+            if (collectedItem.itemName == itemToCheck.itemName)
+            {
+                return true; // Found a duplicate!
+            }
+        }
+        return false;
+    }
+    // ---------------------------------
 
     public void OnItemCollected(InspectableItemData itemData)
     {
@@ -148,11 +154,9 @@ public class Scene1Manager : MonoBehaviour
     {
         if (!isGameActive) return;
         if (sfxSource != null && checkoutSound != null) sfxSource.PlayOneShot(checkoutSound);
-        
         isGameActive = false;
         StopAllCoroutines();
         if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
-        
         levelCompletePanel.SetActive(true);
     }
 
@@ -162,7 +166,6 @@ public class Scene1Manager : MonoBehaviour
         isGameActive = false;
         if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
         if (UIShake.Instance != null) UIShake.Instance.ShakeGameOver();
-
         StartCoroutine(GameOverSequence(reason));
     }
 
@@ -173,8 +176,6 @@ public class Scene1Manager : MonoBehaviour
         if (gameOverReasonText != null) gameOverReasonText.text = reason;
         Time.timeScale = 0f;
     }
-
-    // --- TRANSITION FUNCTIONS ---
 
     public void RetryLevel()
     {

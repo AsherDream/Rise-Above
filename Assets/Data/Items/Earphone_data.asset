@@ -16,9 +16,9 @@ MonoBehaviour:
   itemName: Earphone
   itemDescription: Block out the scary noises with tunes. Just make sure you can
     still hear danger coming!
-  itemType: 1
-  impactValue: 8
+  itemType: 2
+  impactValue: 20
   educationalTip: Risky distraction. You need to hear emergency broadcasts and environmental
     dangers (like rushing water), <color=red>not music</color>.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: 5abc47dc618b0f543a76f2a26354e650, type: 3}
   sisterReaction: {fileID: 11400000, guid: 07a16522a0d349d4683091881d817efa, type: 2}

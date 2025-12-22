@@ -17,9 +17,9 @@ MonoBehaviour:
   itemDescription: A fizzy, sugary drink. It boosts morale for a moment, but leaves
     you thirstier than before.
   itemType: 1
-  impactValue: 15
+  impactValue: 25
   educationalTip: "Soda and alcohol actually dry you out. They make you go to the
     bathroom more, causing you to lose water faster. When you are trying to survive,
     water is gold\u2014don't waste it by drinking these."
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: 2d4b3a385780a544dac4e93a541c94d0, type: 3}
   sisterReaction: {fileID: 11400000, guid: 1cce7900ccd88fb4eba467775dd7d3d6, type: 2}

@@ -20,17 +20,20 @@ public class InspectableItemData : ScriptableObject
     [EnumToggleButtons] public FloodItemType itemType = FloodItemType.Essential;
     [Range(0, 50)] public int impactValue = 10;
 
+    // --- NEW SECTION: CLEANUP MINIGAME SETTINGS ---
+    [Title("Mess Settings")]
+    [InfoBox("If this item causes a mess (like Milk/Eggs), assign the texture here. Leave null if no mess.")]
+    public Texture2D messTexture; // The splatter image
+    public AudioClip messSound;   // The sound it makes when splattering
+    // ----------------------------------------------
+
     [Title("Education")]
     [TextArea(3, 10)]
-    [Tooltip("The lesson displayed on the end screen.")]
     public string educationalTip = "Why was this a good or bad choice?";
 
-    // --- End Screen Visuals ---
     [Title("End Screen Visuals")]
-    [Tooltip("The face the sister makes when reviewing this item.")]
     [PreviewField(50)]
     public Sprite sisterFeedbackSprite;
-    // --------------------------
 
     [Title("Sister's Feedback (In-Game)")]
     public DialogueNode sisterReaction;

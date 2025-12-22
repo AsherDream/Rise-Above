@@ -17,8 +17,8 @@ MonoBehaviour:
   itemDescription: Incredibly versatile. Climb, tie, or skip. Just don't get tangled
     up.
   itemType: 0
-  impactValue: 8
+  impactValue: 25
   educationalTip: Versatile tool. Use it to tether heavy supplies, secure doors,
     or form a <color=green>safety lifeline</color> for crossing strong currents.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: d155b144623eb25469e4159325947a76, type: 3}
   sisterReaction: {fileID: 11400000, guid: 3fb25aedd898df143bd27d6d2c55a492, type: 2}

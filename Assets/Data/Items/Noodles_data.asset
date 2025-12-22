@@ -17,8 +17,8 @@ MonoBehaviour:
   itemDescription: Instant comfort in a cup. Just add hot water and hope for the
     best. A true survival staple.
   itemType: 0
-  impactValue: 10
+  impactValue: 15
   educationalTip: Good backup. Lightweight comfort food. Just ensure you have a way
     to <color=green>boil water safely</color> to prepare them.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: d155b144623eb25469e4159325947a76, type: 3}
   sisterReaction: {fileID: 11400000, guid: 05a16ba87ba04e241918110ea3175e29, type: 2}

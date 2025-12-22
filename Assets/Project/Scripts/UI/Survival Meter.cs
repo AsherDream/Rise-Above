@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Video;
 using TMPro;
 using Sirenix.OdinInspector;
+using System.Collections;
 using System.Collections.Generic;
 
 public class SurvivalMeter : MonoBehaviour
@@ -10,28 +10,35 @@ public class SurvivalMeter : MonoBehaviour
     public static SurvivalMeter Instance;
 
     [Title("UI Components")]
-    [Required] public RawImage meterRawImage;
+    [Required] public Image meterImage; // CHANGED: From RawImage to Image
     [Required] public TMP_Text hpText;
-    [Required] public VideoPlayer videoPlayer;
+
+    // REMOVED: VideoPlayer reference
 
     [Title("HP Settings")]
     public int startingMaxHP = 100;
     public int minHP = 0;
 
+    [Title("Animation Settings")]
+    [InfoBox("How fast the water ripples (seconds per frame). Lower = Faster.")]
+    public float frameRate = 0.15f;
+
     [Title("Visual Stages")]
     public List<MeterStage> visualStages = new List<MeterStage>();
-    public Sprite emptySprite;
-    public Sprite fullSprite;
 
     // --- State Variables ---
     [ReadOnly] public int currentHP;
     [ReadOnly] public int currentMaxHP;
 
+    private Coroutine animationRoutine;
+    private List<Sprite> currentActiveFrames;
+
     [System.Serializable]
     public struct MeterStage
     {
         [Range(0, 100)] public int minPercentage;
-        public VideoClip stageClip;
+        [Tooltip("Drag the 3 images (e.g. 20_1, 20_2, 20_3) here.")]
+        public List<Sprite> animationFrames;
     }
 
     private void Awake()
@@ -47,8 +54,6 @@ public class SurvivalMeter : MonoBehaviour
         UpdateUI();
     }
 
-    // --- NEW LOGIC: CENTRALIZED EFFECTS ---
-
     public void HandleEssentialItem(int value)
     {
         currentHP += value;
@@ -57,7 +62,6 @@ public class SurvivalMeter : MonoBehaviour
         UpdateUI();
         Debug.Log($"<color=green>Essential Item! +{value} HP.</color>");
 
-        // Positive Feedback
         if (SisterReactionController.Instance != null)
             SisterReactionController.Instance.TriggerPositiveSound();
     }
@@ -66,7 +70,7 @@ public class SurvivalMeter : MonoBehaviour
     {
         currentMaxHP -= weightCost;
         if (currentMaxHP < 0) currentMaxHP = 0;
-        currentHP -= weightCost; // Immediate penalty
+        currentHP -= weightCost;
 
         if (currentHP > currentMaxHP) currentHP = currentMaxHP;
         if (currentHP < minHP) currentHP = minHP;
@@ -74,7 +78,6 @@ public class SurvivalMeter : MonoBehaviour
         UpdateUI();
         Debug.Log($"<color=yellow>Burden Item! Max Reduced by {weightCost}.</color>");
 
-        // Burden Feedback
         if (SisterReactionController.Instance != null)
             SisterReactionController.Instance.TriggerNegativeSound();
 
@@ -92,14 +95,12 @@ public class SurvivalMeter : MonoBehaviour
         UpdateUI();
         Debug.Log($"<color=red>Wasteful Item! -{damage} HP.</color>");
 
-        // Wasteful Feedback
         if (SisterReactionController.Instance != null)
             SisterReactionController.Instance.TriggerNegativeSound();
 
         if (UIShake.Instance != null)
             UIShake.Instance.ShakeWasteful();
 
-        // --- TRIGGER LIGHT FLICKER ---
         if (LightFlickerController.Instance != null)
             LightFlickerController.Instance.OnGridDamaged(0.1f);
 
@@ -118,36 +119,21 @@ public class SurvivalMeter : MonoBehaviour
     {
         float percentage = 0;
         if (currentMaxHP > 0)
-            percentage = (float)currentHP / startingMaxHP * 100f; // Use Starting Max for visual consistency
+            percentage = (float)currentHP / startingMaxHP * 100f;
 
         if (hpText != null)
         {
             hpText.text = $"{Mathf.RoundToInt(percentage)}%";
         }
 
-        if (videoPlayer == null || meterRawImage == null) return;
+        if (meterImage == null) return;
 
-        if (currentHP >= startingMaxHP && fullSprite != null)
+        // --- Determine which Stage to play ---
+        List<Sprite> bestMatchFrames = null;
+        int highestThreshold = -1;
+
+        if (visualStages != null)
         {
-            videoPlayer.Stop();
-            meterRawImage.texture = fullSprite.texture;
-            return;
-        }
-
-        if (currentHP <= minHP && emptySprite != null)
-        {
-            videoPlayer.Stop();
-            meterRawImage.texture = emptySprite.texture;
-            return;
-        }
-
-        if (videoPlayer.targetTexture != null) meterRawImage.texture = videoPlayer.targetTexture;
-
-        if (visualStages.Count > 0)
-        {
-            VideoClip clipToPlay = null;
-            int highestThreshold = -1;
-
             foreach (var stage in visualStages)
             {
                 if (percentage >= stage.minPercentage)
@@ -155,20 +141,40 @@ public class SurvivalMeter : MonoBehaviour
                     if (stage.minPercentage > highestThreshold)
                     {
                         highestThreshold = stage.minPercentage;
-                        clipToPlay = stage.stageClip;
+                        bestMatchFrames = stage.animationFrames;
                     }
                 }
             }
+        }
 
-            if (clipToPlay != null && videoPlayer.clip != clipToPlay)
+        // If the frames changed, start a new animation loop
+        if (bestMatchFrames != null && bestMatchFrames != currentActiveFrames)
+        {
+            currentActiveFrames = bestMatchFrames;
+
+            if (animationRoutine != null) StopCoroutine(animationRoutine);
+            animationRoutine = StartCoroutine(PlayWaterAnimation());
+        }
+    }
+
+    private IEnumerator PlayWaterAnimation()
+    {
+        if (currentActiveFrames == null || currentActiveFrames.Count == 0) yield break;
+
+        int index = 0;
+        while (true)
+        {
+            if (currentActiveFrames.Count > 0)
             {
-                videoPlayer.clip = clipToPlay;
-                videoPlayer.Play();
+                // Wrap index: 0, 1, 2, 0, 1, 2...
+                index = index % currentActiveFrames.Count;
+
+                if (meterImage != null)
+                    meterImage.sprite = currentActiveFrames[index];
+
+                index++;
             }
-            else if (!videoPlayer.isPlaying && clipToPlay != null)
-            {
-                videoPlayer.Play();
-            }
+            yield return new WaitForSeconds(frameRate);
         }
     }
 }

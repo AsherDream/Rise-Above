@@ -11,29 +11,25 @@ public class CleanupManager : MonoBehaviour
     [Required] public CanvasGroup splatterCanvasGroup;
     [Required] public RectTransform splatterRect;
 
-    [Title("Textures (Read/Write Enabled!)")]
-    public Texture2D milkTexture;
-    public Texture2D eggTexture;
+    // REMOVED: public Texture2D milkTexture;
+    // REMOVED: public Texture2D eggTexture;
 
     [Tooltip("The shape of the eraser. White pixels = erase.")]
     [Required] public Texture2D dirtBrush;
 
     [Title("Eraser Settings")]
     public int brushSize = 50;
-    [Tooltip("Scale of the brush applied to texture.")]
     public float brushScale = 1.0f;
 
     [Title("Audio")]
     public AudioSource audioSource;
     public AudioClip scrubSound;
 
-    [Title("Mess Specific Sounds")]
-    public AudioClip milkSplatSound;
-    public AudioClip eggSplatSound;
+    // REMOVED: public AudioClip milkSplatSound;
+    // REMOVED: public AudioClip eggSplatSound;
 
     [Title("Cursor Settings")]
-    [Tooltip("Assign your Handkerchief UI object here.")]
-    public RectTransform cleaningToolCursor; // Renamed for clarity (formerly debugCursor)
+    public RectTransform cleaningToolCursor;
 
     private Texture2D dirtMaskTexture;
     private Color32[] texturePixels;
@@ -61,7 +57,6 @@ public class CleanupManager : MonoBehaviour
 
         CacheBrushPixels();
 
-        // Ensure visuals are hidden at start
         if (splatterCanvasGroup != null)
         {
             splatterCanvasGroup.alpha = 0f;
@@ -69,7 +64,6 @@ public class CleanupManager : MonoBehaviour
             splatterCanvasGroup.gameObject.SetActive(false);
         }
 
-        // Ensure custom cursor is hidden at start
         if (cleaningToolCursor != null) cleaningToolCursor.gameObject.SetActive(false);
 
         Canvas rootCanvas = GetComponentInParent<Canvas>();
@@ -98,7 +92,7 @@ public class CleanupManager : MonoBehaviour
     {
         if (!isCleaning) return;
 
-        // --- 1. HANDLE CURSOR MOVEMENT (Always follows mouse) ---
+        // --- 1. HANDLE CURSOR MOVEMENT ---
         Vector2 localPoint;
         bool isMouseInside = RectTransformUtility.ScreenPointToLocalPointInRectangle(splatterRect, Input.mousePosition, uiCamera, out localPoint);
 
@@ -107,7 +101,7 @@ public class CleanupManager : MonoBehaviour
             cleaningToolCursor.anchoredPosition = localPoint;
         }
 
-        // --- 2. HANDLE SCRUBBING (Only on Click) ---
+        // --- 2. HANDLE SCRUBBING ---
         if (Input.GetMouseButton(0) && isMouseInside)
         {
             float normalizedX = (localPoint.x / splatterRect.rect.width) + 0.5f;
@@ -214,26 +208,23 @@ public class CleanupManager : MonoBehaviour
         return didClean;
     }
 
+    // --- UPDATED TRIGGER METHOD ---
     [Button("Test Splatter")]
-    public void TriggerMess(string messType = "milk")
+    public void TriggerMess(InspectableItemData itemData)
     {
         if (splatterCanvasGroup == null || splatterRawImage == null) return;
+        if (itemData == null) return;
 
-        Texture2D sourceTex = milkTexture;
-        AudioClip soundToPlay = milkSplatSound;
-
-        if (messType.ToLower().Contains("egg"))
+        // 1. Check if this item actually has a mess texture
+        if (itemData.messTexture == null)
         {
-            if (eggTexture != null) sourceTex = eggTexture;
-            if (eggSplatSound != null) soundToPlay = eggSplatSound;
-        }
-        else
-        {
-            if (milkTexture != null) sourceTex = milkTexture;
-            if (milkSplatSound != null) soundToPlay = milkSplatSound;
+            // This item is "Wasteful" but doesn't cause a mess (like Earphones or Candy)
+            return;
         }
 
-        if (sourceTex == null) return;
+        // 2. Use the data directly!
+        Texture2D sourceTex = itemData.messTexture;
+        AudioClip soundToPlay = itemData.messSound;
 
         if (dirtMaskTexture != null) Destroy(dirtMaskTexture);
 
@@ -256,11 +247,10 @@ public class CleanupManager : MonoBehaviour
         splatterCanvasGroup.alpha = 1f;
         splatterCanvasGroup.blocksRaycasts = true;
 
-        // --- CUSTOM CURSOR LOGIC ON ---
         isCleaning = true;
         hasLastPos = false;
-        Cursor.visible = false; // Hide system cursor
-        if (cleaningToolCursor != null) cleaningToolCursor.gameObject.SetActive(true); // Show Handkerchief
+        Cursor.visible = false;
+        if (cleaningToolCursor != null) cleaningToolCursor.gameObject.SetActive(true);
 
         if (audioSource != null && soundToPlay != null) audioSource.PlayOneShot(soundToPlay);
         if (DialogueManager.Instance != null) DialogueManager.Instance.ForcePortrait(SisterMood.Complain);
@@ -274,10 +264,9 @@ public class CleanupManager : MonoBehaviour
 
         if (percentageRemaining < 0.05f)
         {
-            // --- CUSTOM CURSOR LOGIC OFF ---
             isCleaning = false;
-            Cursor.visible = true; // Show system cursor
-            if (cleaningToolCursor != null) cleaningToolCursor.gameObject.SetActive(false); // Hide Handkerchief
+            Cursor.visible = true;
+            if (cleaningToolCursor != null) cleaningToolCursor.gameObject.SetActive(false);
 
             splatterCanvasGroup.alpha = 0f;
             splatterCanvasGroup.blocksRaycasts = false;

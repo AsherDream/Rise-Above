@@ -17,8 +17,8 @@ MonoBehaviour:
   itemDescription: Knowledge is power. Or at least a good way to pass time without
     wasting batteries.
   itemType: 1
-  impactValue: 10
+  impactValue: 25
   educationalTip: Heavy vulnerability. Paper absorbs water rapidly, turning heavy
     books into <color=red>useless dead weight</color>. Prioritize survival gear.
-  sisterFeedbackSprite: {fileID: 0}
+  sisterFeedbackSprite: {fileID: 21300000, guid: 2d4b3a385780a544dac4e93a541c94d0, type: 3}
   sisterReaction: {fileID: 11400000, guid: 2848e8b88d068f5488c542d59defe2c2, type: 2}
