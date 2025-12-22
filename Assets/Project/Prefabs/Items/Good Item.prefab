@@ -101,5 +101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a526dfc93ef7ba64caaa8d7ee817d933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DraggableItem
+  itemData: {fileID: 0}
   itemImage: {fileID: 5557253471758028847}
-  validDropColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  hoverColor: {r: 1, g: 1, b: 1, a: 1}
+  validDropColor: {r: 1, g: 1, b: 1, a: 1}

@@ -1,16 +1,10 @@
 fileFormatVersion: 2
-guid: 1c2abe17b2cfe78409e5edeee1193c08
+guid: 236be8f528de87c48b811c888cc8f9c8
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4605021255626960074
-    second: Lolita Toy_0
-  - first:
-      213: 1384232160118862942
-    second: Lolita Toy_1
-  - first:
-      213: -4816522112124576430
-    second: Lolita Toy_2
+      213: -5913738696227704600
+    second: flashlight_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -119,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Lolita Toy_0
+      name: flashlight_0
       rect:
         serializedVersion: 2
-        x: 113
-        y: 287
-        width: 12
-        height: 18
+        x: 21
+        y: 19
+        width: 873
+        height: 311
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -134,52 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6335b33019da710c0800000000000000
-      internalID: -4605021255626960074
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Lolita Toy_1
-      rect:
-        serializedVersion: 2
-        x: 838
-        y: 68
-        width: 1200
-        height: 1329
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: e547e8ec0d7c53310800000000000000
-      internalID: 1384232160118862942
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Lolita Toy_2
-      rect:
-        serializedVersion: 2
-        x: 755
-        y: 265
-        width: 80
-        height: 13
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 25d100678a6482db0800000000000000
-      internalID: -4816522112124576430
+      spriteID: 8e0bdd4fcfd2eeda0800000000000000
+      internalID: -5913738696227704600
       vertices: []
       indices: 
       edges: []
@@ -198,9 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Lolita Toy_0: -4605021255626960074
-      Lolita Toy_1: 1384232160118862942
-      Lolita Toy_2: -4816522112124576430
+      flashlight_0: -5913738696227704600
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

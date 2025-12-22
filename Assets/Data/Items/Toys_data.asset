@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab457d2e0861b242ae0ba0a278af22c, type: 3}
   m_Name: Toys_data
   m_EditorClassIdentifier: Assembly-CSharp::InspectableItemData
-  itemSprite: {fileID: 21300000, guid: 1c2abe17b2cfe78409e5edeee1193c08, type: 3}
+  itemSprite: {fileID: 21300000, guid: 5784c016d82182d44b0399d00af9d375, type: 3}
   itemName: Toys
   itemDescription: A reminder of simpler times. Useless for survival, but good for
     the soul.
