@@ -1,233 +1,197 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.Rendering; // <-- NEW: Required for Volume
+using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
 using Sirenix.OdinInspector;
 
 public class PanelManager : MonoBehaviour
 {
+    public static PanelManager Instance;
+
     [Title("UI Panels")]
     [Required] public GameObject pauseMenu;
     [Required] public GameObject settingsPanel;
     [Required] public GameObject saveLoadPanel;
     [Required] public GameObject exitConfirmPanel;
+    [Required] public GameObject creditsPanel; // --- NEW: Added Credits Panel Reference ---
 
-    [Title("Root Reference")]
-    [ReadOnly] public GameObject uiRoot;
-
-    // --- NEW REFERENCES ---
     private Canvas rootCanvas;
     private GraphicRaycaster rootRaycaster;
     private Camera rootCamera;
 
     [Title("Effects")]
-    [Tooltip("The Global Volume that contains the Depth of Field / Blur effect.")]
-    public Volume pauseVolume; // <-- NEW: Drag your Global Volume here
+    public Volume pauseVolume;
 
     [Title("State (Read-Only)")]
     [ReadOnly] public string currentPanel = "None";
 
     private void Awake()
     {
-        uiRoot = GameObject.FindWithTag("UIRoot");
-        if (uiRoot == null)
-            Debug.LogError("[PanelManager] UIRoot not found in scene!");
+        // --- SINGLETON PATTERN ---
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
         else
-            Debug.Log("[PanelManager] UIRoot found successfully in Awake.");
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
 
     private void Start()
     {
-        if (uiRoot != null)
-        {
-            rootCanvas = uiRoot.GetComponentInChildren<Canvas>(true);
-            rootRaycaster = uiRoot.GetComponentInChildren<GraphicRaycaster>(true);
-            rootCamera = uiRoot.GetComponentInChildren<Camera>(true);
-
-            if (rootCanvas == null) Debug.LogError("[PanelManager] No Canvas found on UIRoot!");
-            if (rootRaycaster == null) Debug.LogError("[PanelManager] No GraphicRaycaster found!");
-            if (rootCamera == null) Debug.LogError("[PanelManager] No Camera found on UIRoot!");
-
-            // Force the canvas AND camera to be disabled on start.
-            if (rootCanvas != null) rootCanvas.enabled = false;
-            if (rootRaycaster != null) rootRaycaster.enabled = false;
-            if (rootCamera != null) rootCamera.enabled = false;
-
-            // Ensure blur is off at start
-            if (pauseVolume != null) pauseVolume.weight = 0; // <-- NEW
-
-            Debug.Log("[PanelManager] Canvas and Camera hidden on Start().");
-        }
+        RefreshReferences();
+        HideAll();
     }
 
     private void Update()
     {
-        // 1. Check for Key Input FIRST
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // --- START OF INPUT BLOCK ---
+            // Safety checks
+            if (CleanupManager.IsMessActive || ItemInspector.IsInspecting) return;
 
-            // 2. Check for blockers (Messy Game / Inspection)
-            if (CleanupManager.IsMessActive)
+            // Don't open Pause Menu if we are sitting in the Main Menu and nothing is open
+            if (IsMainMenu() && currentPanel == "None")
             {
-                return; // Stop here if cleaning
+                return;
             }
 
-            if (ItemInspector.IsInspecting)
-            {
-                return; // Stop here if reading text
-            }
-
-            // 3. If no blockers, THEN toggle the menu
             HandleBack();
-
-            // --- END OF INPUT BLOCK ---
         }
     }
+
+    // --- REFERENCE FINDING ---
+    private void RefreshReferences()
+    {
+        if (rootCanvas == null) rootCanvas = GetComponentInChildren<Canvas>(true);
+        if (rootRaycaster == null) rootRaycaster = GetComponentInChildren<GraphicRaycaster>(true);
+        if (rootCamera == null) rootCamera = GetComponentInChildren<Camera>(true);
+
+        if (rootCanvas == null) Debug.LogError("[PanelManager] Could not find Canvas! Ensure PanelManager is on the UI Root.");
+    }
+
+    public void HideAll()
+    {
+        if (rootCanvas != null) rootCanvas.enabled = false;
+        if (rootRaycaster != null) rootRaycaster.enabled = false;
+        if (rootCamera != null) rootCamera.enabled = false;
+        if (pauseVolume != null) pauseVolume.weight = 0;
+
+        if (pauseMenu) pauseMenu.SetActive(false);
+        if (settingsPanel) settingsPanel.SetActive(false);
+        if (saveLoadPanel) saveLoadPanel.SetActive(false);
+        if (exitConfirmPanel) exitConfirmPanel.SetActive(false);
+        if (creditsPanel) creditsPanel.SetActive(false); // --- NEW: Ensure Credits close too ---
+
+        currentPanel = "None";
+    }
+
+    // --- OPEN PANELS ---
+
+    // --- NEW: Function to open credits ---
+    public void OpenCredits()
+    {
+        RefreshReferences();
+        EnableCanvas();
+        ShowPanel(creditsPanel);
+    }
+
+    public void OpenSettings()
+    {
+        RefreshReferences();
+        EnableCanvas();
+        ShowPanel(settingsPanel);
+    }
+
+    public void OpenExitConfirm()
+    {
+        RefreshReferences();
+        EnableCanvas();
+        ShowPanel(exitConfirmPanel);
+    }
+
+    private void EnableCanvas()
+    {
+        if (rootCanvas != null) rootCanvas.enabled = true;
+        if (rootRaycaster != null) rootRaycaster.enabled = true;
+        if (rootCamera != null) rootCamera.enabled = true;
+    }
+
+    // --- NAVIGATION LOGIC ---
 
     [Button("Back (Universal)")]
     public void HandleBack()
     {
-        // Re-find references if they are null
-        if (rootCanvas == null || rootRaycaster == null || rootCamera == null)
-        {
-            if (uiRoot == null) uiRoot = GameObject.FindWithTag("UIRoot");
-            if (uiRoot != null)
-            {
-                rootCanvas = uiRoot.GetComponentInChildren<Canvas>(true);
-                rootRaycaster = uiRoot.GetComponentInChildren<GraphicRaycaster>(true);
-                rootCamera = uiRoot.GetComponentInChildren<Camera>(true);
-            }
-        }
+        RefreshReferences();
 
-        if (rootCanvas == null || rootRaycaster == null || rootCamera == null)
+        // 1. If in Main Menu, Back/Escape just hides whatever panel is open
+        if (IsMainMenu())
         {
-            Debug.LogError("[PanelManager] Cannot handle back — components missing!");
+            HideAll();
             return;
         }
 
-        // Check panel states first
-        if (exitConfirmPanel.activeSelf)
+        // 2. In-Game Logic
+        // Check if ANY sub-panel is open (Settings, Save, Exit, OR CREDITS)
+        if (exitConfirmPanel.activeSelf || settingsPanel.activeSelf || saveLoadPanel.activeSelf || (creditsPanel && creditsPanel.activeSelf))
         {
-            Debug.Log("[PanelManager] Closing Exit Confirm -> Returning to Pause Menu.");
-            ShowPanel(pauseMenu);
-        }
-        else if (settingsPanel.activeSelf)
-        {
-            Debug.Log("[PanelManager] Closing Settings -> Returning to Pause Menu.");
-            ShowPanel(pauseMenu);
-        }
-        else if (saveLoadPanel.activeSelf)
-        {
-            Debug.Log("[PanelManager] Closing Save/Load -> Returning to Pause Menu.");
-            ShowPanel(pauseMenu);
+            ShowPanel(pauseMenu); // Go back to Pause Menu
         }
         else if (pauseMenu.activeSelf)
         {
-            // --- RESUME GAME ---
-            Debug.Log("[PanelManager] Closing Pause Menu -> Resuming Game.");
-            pauseMenu.SetActive(false);
-
-            rootCanvas.enabled = false;
-            rootRaycaster.enabled = false;
-            rootCamera.enabled = false;
-
-            // Disable Blur
-            if (pauseVolume != null) pauseVolume.weight = 0; // <-- NEW
-
+            HideAll(); // Resume Game
             Time.timeScale = 1f;
-            currentPanel = "None";
         }
         else
         {
-            // --- PAUSE GAME ---
-            Debug.Log("[PanelManager] Opening Pause Menu.");
-
-            rootCanvas.enabled = true;
-            rootRaycaster.enabled = true;
-            rootCamera.enabled = true;
-
-            // Enable Blur
-            if (pauseVolume != null) pauseVolume.weight = 1; // <-- NEW
-
+            EnableCanvas(); // Force the canvas to appear
             ShowPanel(pauseMenu);
-            Time.timeScale = 0f;
+            if (pauseVolume != null) pauseVolume.weight = 1;
+            Time.timeScale = 0f; // Stop time
         }
     }
 
     private void ShowPanel(GameObject panelToShow)
     {
-        pauseMenu.SetActive(panelToShow == pauseMenu);
-        settingsPanel.SetActive(panelToShow == settingsPanel);
-        saveLoadPanel.SetActive(panelToShow == saveLoadPanel);
-        exitConfirmPanel.SetActive(panelToShow == exitConfirmPanel);
+        if (pauseMenu) pauseMenu.SetActive(panelToShow == pauseMenu);
+        if (settingsPanel) settingsPanel.SetActive(panelToShow == settingsPanel);
+        if (saveLoadPanel) saveLoadPanel.SetActive(panelToShow == saveLoadPanel);
+        if (exitConfirmPanel) exitConfirmPanel.SetActive(panelToShow == exitConfirmPanel);
+        if (creditsPanel) creditsPanel.SetActive(panelToShow == creditsPanel); // --- NEW: Manage Credits ---
 
-        currentPanel = panelToShow.name;
-        Debug.Log($"[PanelManager] Showing panel: {currentPanel}");
+        currentPanel = panelToShow != null ? panelToShow.name : "None";
     }
 
     // --- BUTTON FUNCTIONS ---
 
-    [BoxGroup("Pause Menu Buttons")]
-    [Button]
-    public void OnResume()
-    {
-        Debug.Log("Resume pressed");
-        HandleBack();
-    }
+    public void OnResume() { HandleBack(); }
+    public void OnSettings() { ShowPanel(settingsPanel); }
+    public void OnSaveAndLoad() { ShowPanel(saveLoadPanel); }
 
-    [BoxGroup("Pause Menu Buttons")]
-    [Button]
-    public void OnSettings()
-    {
-        Debug.Log("Settings pressed");
-        ShowPanel(settingsPanel);
-    }
-
-    [BoxGroup("Pause Menu Buttons")]
-    [Button]
-    public void OnSaveAndLoad()
-    {
-        Debug.Log("Save/Load Pressed");
-        ShowPanel(saveLoadPanel);
-    }
-
-    [BoxGroup("Pause Menu Buttons")]
-    [Button]
     public void OnReturnToMainMenu()
     {
-        Debug.Log("Return to Main Menu pressed");
         Time.timeScale = 1f;
-        // Turn off blur before leaving
-        if (pauseVolume != null) pauseVolume.weight = 0; // <-- NEW
+        HideAll();
         SceneManager.LoadScene("MainMenu");
     }
 
-    [BoxGroup("Exit Panel Buttons")]
-    [Button]
-    public void OnExitPressed()
-    {
-        Debug.Log("Exit button pressed");
-        ShowPanel(exitConfirmPanel);
-    }
+    public void OnExitPressed() { ShowPanel(exitConfirmPanel); }
+    public void OnExitCancel() { HandleBack(); }
 
-    [BoxGroup("Exit Panel Buttons")]
-    [Button]
     public void OnExitConfirm()
     {
-        Debug.Log("Exit confirmed.");
 #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
+            UnityEditor.EditorApplication.isPlaying = false;
 #else
         Application.Quit();
 #endif
     }
 
-    [BoxGroup("Exit Panel Buttons")]
-    [Button]
-    public void OnExitCancel()
+    private bool IsMainMenu()
     {
-        Debug.Log("Exit cancelled");
-        ShowPanel(pauseMenu); // Go back to the pause menu
+        return SceneManager.GetActiveScene().name == "MainMenu";
     }
 }

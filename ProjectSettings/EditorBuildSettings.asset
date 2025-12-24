@@ -6,13 +6,13 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Project/Scenes/MainMenu.unity
+    path: Assets/Project/Scenes/UI_Global/MainMenu.unity
     guid: 2edd98ee45354254aaca50d2bdacebc1
   - enabled: 1
     path: Assets/Project/Scenes/UI_Global/UI_Global.unity
     guid: aa4ac3b934ae7a645b02830962dd6bd9
   - enabled: 1
-    path: Assets/Project/Scenes/Test_Mechanics/Drag_Drop.unity
-    guid: 2d5604a9532a194419f840c4f15e46e8
+    path: Assets/Project/Scenes/GamePlay/SuperMarket_Scene.unity
+    guid: 625e747e0b567894190a8d5e127728a8
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

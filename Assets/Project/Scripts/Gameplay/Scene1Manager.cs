@@ -31,7 +31,8 @@ public class Scene1Manager : MonoBehaviour
     [Title("Game Over & Transitions")]
     [Required] public GameObject gameOverPanel;
     [Required] public TextMeshProUGUI gameOverReasonText;
-    [Required] public GameObject specialThanksPanel;
+
+    // --- REMOVED: specialThanksPanel (It lives in Global UI now) --- 
 
     [ReadOnly]
     public List<InspectableItemData> collectedItemsList = new List<InspectableItemData>();
@@ -51,6 +52,8 @@ public class Scene1Manager : MonoBehaviour
 
     private void Start()
     {
+        Time.timeScale = 1f;
+
         currentTime = levelTimeInSeconds;
         currentItems = 0;
         collectedItemsList.Clear();
@@ -59,13 +62,17 @@ public class Scene1Manager : MonoBehaviour
 
         if (timerText != null) defaultTimerColor = timerText.color;
 
+        // Hide panels
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
-        if (specialThanksPanel != null) specialThanksPanel.SetActive(false);
+        // SpecialThanks is handled by PanelManager now, so we don't hide it here.
 
+        // Disable checkout initially
         checkoutButton.interactable = false;
-        if (checkoutButton.image != null) checkoutButton.image.color = Color.gray;
-
+        if (checkoutButton.image != null)
+        {
+            checkoutButton.image.color = Color.gray;
+        }
         checkoutButton.onClick.AddListener(OnCheckoutClicked);
     }
 
@@ -85,7 +92,8 @@ public class Scene1Manager : MonoBehaviour
     private void PlayTimerBeep()
     {
         hasBeeped = true;
-        if (timerAudioSource != null && beepSound != null) timerAudioSource.PlayOneShot(beepSound);
+        if (timerAudioSource != null && beepSound != null)
+            timerAudioSource.PlayOneShot(beepSound);
     }
 
     private void UpdateTimerUI()
@@ -100,22 +108,15 @@ public class Scene1Manager : MonoBehaviour
         }
     }
 
-    // --- NEW: Check for Duplicates ---
     public bool IsItemAlreadyInCart(InspectableItemData itemToCheck)
     {
         if (itemToCheck == null) return false;
-
-        // Check our list to see if the item name already exists
         foreach (var collectedItem in collectedItemsList)
         {
-            if (collectedItem.itemName == itemToCheck.itemName)
-            {
-                return true; // Found a duplicate!
-            }
+            if (collectedItem.itemName == itemToCheck.itemName) return true;
         }
         return false;
     }
-    // ---------------------------------
 
     public void OnItemCollected(InspectableItemData itemData)
     {
@@ -129,25 +130,8 @@ public class Scene1Manager : MonoBehaviour
     private void EnableCheckout()
     {
         checkoutButton.interactable = true;
-        if (checkoutButton.image != null) checkoutButton.image.color = Color.red;
+        if (checkoutButton.image != null) checkoutButton.image.color = Color.white;
         if (SisterReactionController.Instance != null) SisterReactionController.Instance.TriggerAlert();
-        StartCoroutine(FlashCheckoutButton());
-    }
-
-    private IEnumerator FlashCheckoutButton()
-    {
-        if (checkoutButton.image == null) yield break;
-        Color redColor = new Color(1f, 0.2f, 0.2f);
-        Color lightRedColor = new Color(1f, 0.6f, 0.6f);
-
-        while (isGameActive)
-        {
-            checkoutButton.interactable = true;
-            checkoutButton.image.color = redColor;
-            yield return new WaitForSeconds(0.5f);
-            checkoutButton.image.color = lightRedColor;
-            yield return new WaitForSeconds(0.5f);
-        }
     }
 
     public void OnCheckoutClicked()
@@ -156,7 +140,15 @@ public class Scene1Manager : MonoBehaviour
         if (sfxSource != null && checkoutSound != null) sfxSource.PlayOneShot(checkoutSound);
         isGameActive = false;
         StopAllCoroutines();
+
         if (timerAudioSource != null && timerAudioSource.isPlaying) timerAudioSource.Stop();
+
+        if (SisterReactionController.Instance != null)
+            SisterReactionController.Instance.StopBehaviors();
+
+        if (StormController.Instance != null)
+            StormController.Instance.StopStorm();
+
         levelCompletePanel.SetActive(true);
     }
 
@@ -189,10 +181,22 @@ public class Scene1Manager : MonoBehaviour
         SceneManager.LoadScene("MainMenu");
     }
 
+    // --- UPDATED LOGIC ---
     public void GoToSpecialThanks()
     {
+        // 1. Hide the local panels in this scene
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
-        if (specialThanksPanel != null) specialThanksPanel.SetActive(true);
+
+        // 2. Ask the Global PanelManager to show the credits
+        // Since PanelManager is in UI_Global (a different scene), we access it via Singleton
+        if (PanelManager.Instance != null)
+        {
+            PanelManager.Instance.OpenCredits();
+        }
+        else
+        {
+            Debug.LogError("PanelManager not found! Is UI_Global loaded?");
+        }
     }
 }

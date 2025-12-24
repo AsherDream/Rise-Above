@@ -1,0 +1,669 @@
+fileFormatVersion: 2
+guid: 9a1170940d5bc4a439880630d2b6a9c5
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4739501368515352276
+    second: DropDown (1)_0
+  - first:
+      213: -8773706818699420170
+    second: DropDown (1)_1
+  - first:
+      213: 4741756830095809589
+    second: DropDown (1)_2
+  - first:
+      213: -2103107606524871213
+    second: DropDown (1)_3
+  - first:
+      213: 4173563887351679455
+    second: DropDown (1)_4
+  - first:
+      213: 5462795683449387694
+    second: DropDown (1)_5
+  - first:
+      213: 8849991796575295375
+    second: DropDown (1)_6
+  - first:
+      213: 677472508208903082
+    second: DropDown (1)_7
+  - first:
+      213: 2301367868526604859
+    second: DropDown (1)_8
+  - first:
+      213: 5749084941970366425
+    second: DropDown (1)_9
+  - first:
+      213: -1431841186994482175
+    second: DropDown (1)_10
+  - first:
+      213: 4901522552666111321
+    second: DropDown (1)_11
+  - first:
+      213: -3321954161831907147
+    second: DropDown (1)_12
+  - first:
+      213: -5352152535287150057
+    second: DropDown (1)_13
+  - first:
+      213: -5455408592701849454
+    second: DropDown (1)_14
+  - first:
+      213: -5676920338413307958
+    second: DropDown (1)_15
+  - first:
+      213: -7005241889176247221
+    second: DropDown (1)_16
+  - first:
+      213: -2604531741388048723
+    second: DropDown (1)_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: DropDown_
+      rect:
+        serializedVersion: 2
+        x: 1859
+        y: 1777
+        width: 8
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6fd9ffb22288d3680800000000000000
+      internalID: -8773706818699420170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_2
+      rect:
+        serializedVersion: 2
+        x: 1862
+        y: 1801
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53c942dc6ba1ec140800000000000000
+      internalID: 4741756830095809589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_3
+      rect:
+        serializedVersion: 2
+        x: 737
+        y: 105
+        width: 6
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ddb9ac46c240d2e0800000000000000
+      internalID: -2103107606524871213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_4
+      rect:
+        serializedVersion: 2
+        x: 745
+        y: 104
+        width: 35
+        height: 7
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd9cef83e3a7be930800000000000000
+      internalID: 4173563887351679455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_5
+      rect:
+        serializedVersion: 2
+        x: 786
+        y: 105
+        width: 6
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaab9802bbfbfcb40800000000000000
+      internalID: 5462795683449387694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_6
+      rect:
+        serializedVersion: 2
+        x: 793
+        y: 104
+        width: 47
+        height: 7
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f87ddf356ac71da70800000000000000
+      internalID: 8849991796575295375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_7
+      rect:
+        serializedVersion: 2
+        x: 841
+        y: 105
+        width: 20
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa372e428add66900800000000000000
+      internalID: 677472508208903082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_8
+      rect:
+        serializedVersion: 2
+        x: 937
+        y: 105
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b32b60d12e910ff10800000000000000
+      internalID: 2301367868526604859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_9
+      rect:
+        serializedVersion: 2
+        x: 943
+        y: 105
+        width: 9
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9dfd0b57b4ad8cf40800000000000000
+      internalID: 5749084941970366425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_10
+      rect:
+        serializedVersion: 2
+        x: 953
+        y: 105
+        width: 12
+        height: 7
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1049b62d604112ce0800000000000000
+      internalID: -1431841186994482175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_11
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 104
+        width: 44
+        height: 8
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95dba32dac4b50440800000000000000
+      internalID: 4901522552666111321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_12
+      rect:
+        serializedVersion: 2
+        x: 1012
+        y: 104
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b0f0ef4a4c06e1d0800000000000000
+      internalID: -3321954161831907147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_13
+      rect:
+        serializedVersion: 2
+        x: 1019
+        y: 104
+        width: 77
+        height: 8
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71ac08640a559b5b0800000000000000
+      internalID: -5352152535287150057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_14
+      rect:
+        serializedVersion: 2
+        x: 1097
+        y: 104
+        width: 59
+        height: 13
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2908467f9ce7a44b0800000000000000
+      internalID: -5455408592701849454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_15
+      rect:
+        serializedVersion: 2
+        x: 1157
+        y: 105
+        width: 18
+        height: 6
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac73fa2a7078731b0800000000000000
+      internalID: -5676920338413307958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_16
+      rect:
+        serializedVersion: 2
+        x: 1176
+        y: 105
+        width: 32
+        height: 6
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b44a6fdfd9168ce90800000000000000
+      internalID: -7005241889176247221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_17
+      rect:
+        serializedVersion: 2
+        x: 1213
+        y: 105
+        width: 7
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da6f55c3e28dadbd0800000000000000
+      internalID: -2604531741388048723
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown_Body
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 176
+        width: 1550
+        height: 1525
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 39, y: 44, z: 41, w: 47}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c8d4ee44852beed4c9624414cb3bef26
+      internalID: 235350388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown (1)_18
+      rect:
+        serializedVersion: 2
+        x: 1222
+        y: 105
+        width: 7
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c15408ea4843a714aa80441eb598a5fc
+      internalID: -513848415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown_Header
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 1655
+        width: 1785
+        height: 431
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 213, y: 11, z: 144, w: 15}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6592a548b1013c94cbd9e66bfff9da0b
+      internalID: 1768245990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropDown_Items
+      rect:
+        serializedVersion: 2
+        x: 353
+        y: 1189
+        width: 1191
+        height: 317
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 17, y: 17, z: 106, w: 13}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3b6ff7c93f5ecc842bf9ac90abeab399
+      internalID: -144186924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 8b99b8b85d4300f49904993012dc3f7e
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      DropDown (1)_10: -1431841186994482175
+      DropDown (1)_11: 4901522552666111321
+      DropDown (1)_12: -3321954161831907147
+      DropDown (1)_13: -5352152535287150057
+      DropDown (1)_14: -5455408592701849454
+      DropDown (1)_15: -5676920338413307958
+      DropDown (1)_16: -7005241889176247221
+      DropDown (1)_17: -2604531741388048723
+      DropDown (1)_18: -513848415
+      DropDown (1)_2: 4741756830095809589
+      DropDown (1)_3: -2103107606524871213
+      DropDown (1)_4: 4173563887351679455
+      DropDown (1)_5: 5462795683449387694
+      DropDown (1)_6: 8849991796575295375
+      DropDown (1)_7: 677472508208903082
+      DropDown (1)_8: 2301367868526604859
+      DropDown (1)_9: 5749084941970366425
+      DropDown_: -8773706818699420170
+      DropDown_Body: 235350388
+      DropDown_Header: 1768245990
+      DropDown_Items: -144186924
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

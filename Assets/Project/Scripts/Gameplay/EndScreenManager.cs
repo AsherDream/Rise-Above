@@ -3,7 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using Sirenix.OdinInspector;
 using System.Collections.Generic;
-using DG.Tweening; // REQUIRED for Juice
+using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 public class EndScreenManager : MonoBehaviour
 {
@@ -15,7 +16,13 @@ public class EndScreenManager : MonoBehaviour
 
     [Title("Left Panel (Stats)")]
     [Required] public TextMeshProUGUI statsText;
-    [Required] public CanvasGroup statsCanvasGroup; // Add a CanvasGroup to 'Stats' object for fading
+    [Required] public CanvasGroup statsCanvasGroup;
+
+    [Title("Rank Stamps")] // <--- NEW SECTION
+    [Required] public Image rankStampImage;
+    public Sprite rankASprite;
+    public Sprite rankBSprite;
+    public Sprite rankCSprite;
 
     [Title("Right Panel (Grid)")]
     [Required] public RectTransform gridContentParent;
@@ -30,53 +37,60 @@ public class EndScreenManager : MonoBehaviour
     [Required] public TextMeshProUGUI reasonText;
 
     [Title("Navigation")]
-    [Required] public GameObject mainMenuButton; // <--- The Missing Button Reference
+    [Required] public GameObject mainMenuButton;
+
+    [Title("Audio Juice")]
+    public AudioSource sfxSource;
+    public AudioClip popSound;
+    public AudioClip paperOpenSound;
+    public AudioClip victoryChime;
+    public AudioClip stampThudSound; // <--- NEW SOUND SLOT (Optional)
 
     [Title("Defaults")]
     public Sprite defaultSisterSprite;
-    public string defaultReason = "Select an item to see details.";
 
     private bool isDetailViewOpen = false;
 
     private void Awake()
     {
-        // Safety: Hide things instantly on boot
         if (detailPanel != null) detailPanel.SetActive(false);
         if (mainMenuButton != null) mainMenuButton.SetActive(false);
+        if (rankStampImage != null) rankStampImage.gameObject.SetActive(false); // Hide stamp initially
     }
 
-    private void Update()
-    {
-        if (isDetailViewOpen)
-        {
-            if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
-            {
-                ClearDetailView();
-            }
-        }
-    }
-
-    private void OnEnable()
+    private void Start()
     {
         ClearDetailView();
 
-        // Hide button initially so it can pop in later
         if (mainMenuButton != null)
         {
+            Button btn = mainMenuButton.GetComponent<Button>();
+            if (btn != null) btn.onClick.AddListener(OnMainMenuClicked);
             mainMenuButton.transform.localScale = Vector3.zero;
-            mainMenuButton.SetActive(true);
         }
 
         if (Scene1Manager.Instance == null) return;
 
-        GenerateStats();
+        if (sfxSource && victoryChime) sfxSource.PlayOneShot(victoryChime);
+
+        if (PanelManager.Instance != null)
+            PanelManager.Instance.enabled = false;
+
+        GenerateStats(); // This now triggers the stamp animation too!
         GenerateGrid();
+    }
+
+    private void OnDestroy()
+    {
+        if (PanelManager.Instance != null)
+            PanelManager.Instance.enabled = true;
     }
 
     private void GenerateStats()
     {
         List<InspectableItemData> items = Scene1Manager.Instance.collectedItemsList;
 
+        // --- MATH LOGIC ---
         int totalItems = items.Count;
         int essentials = 0;
         int burdens = 0;
@@ -89,118 +103,132 @@ public class EndScreenManager : MonoBehaviour
             else wasteful++;
         }
 
-        int hp = 0;
-        if (SurvivalMeter.Instance != null) hp = SurvivalMeter.Instance.currentHP;
+        int hp = (SurvivalMeter.Instance != null) ? SurvivalMeter.Instance.currentHP : 100;
         int days = (hp / 20) + 1;
 
-        string stats = $"<b>SURVIVAL RATE:</b>\n<size=150%>{hp}%</size>\n\n";
+        // --- TEXT FORMATTING ---
+        string stats = $"<b>SURVIVAL PROBABILITY:</b>\n<size=150%>{hp}%</size>\n\n";
         stats += $"<b>EST. SURVIVAL:</b>\n{days} Days\n\n";
-        stats += $"<b>PACKING STATS:</b>\n";
-        stats += $"Total Items: {totalItems}\n";
+        stats += $"<b>PACKING REPORT:</b>\n";
+        stats += $"Items Packed: {totalItems}\n";
         stats += $"<color=green>Essential: {essentials}</color>\n";
-        stats += $"<color=yellow>Burdens: {burdens}</color>\n";
-        stats += $"<color=red>Wasteful: {wasteful}</color>";
+        stats += $"<color=yellow>Burden: {burdens}</color>\n";
+        stats += $"<color=red>Useless: {wasteful}</color>";
 
         if (statsText != null) statsText.text = stats;
 
-        // --- ANIMATION: Slide Stats In ---
+        // --- ANIMATION: SLIDE TEXT ---
         if (statsCanvasGroup != null)
         {
             statsCanvasGroup.alpha = 0f;
-            statsText.transform.localPosition -= Vector3.right * 50f; // Start slightly left
+            statsText.transform.localPosition -= Vector3.right * 50f;
 
             Sequence statSeq = DOTween.Sequence();
             statSeq.Append(statsCanvasGroup.DOFade(1, 0.5f));
             statSeq.Join(statsText.transform.DOLocalMoveX(statsText.transform.localPosition.x + 50f, 0.5f).SetEase(Ease.OutQuad));
         }
+
+        // --- NEW: TRIGGER RANK STAMP ---
+        ShowRankStamp(hp);
+    }
+
+    private void ShowRankStamp(int score)
+    {
+        if (rankStampImage == null) return;
+
+        rankStampImage.gameObject.SetActive(true);
+
+        // 1. Determine Rank
+        Sprite selectedStamp = rankCSprite; // Default to C
+        if (score >= 90) selectedStamp = rankASprite;
+        else if (score >= 70) selectedStamp = rankBSprite;
+
+        rankStampImage.sprite = selectedStamp;
+
+        // 2. Setup "Slam" Animation State
+        rankStampImage.color = new Color(1, 1, 1, 0); // Invisible
+        rankStampImage.transform.localScale = Vector3.one * 3f; // Big (Zoomed in)
+
+        // 3. The Animation Sequence
+        Sequence stampSeq = DOTween.Sequence();
+
+        // Wait 1.5 seconds (let the grid populate first)
+        stampSeq.AppendInterval(1.5f);
+
+        // Fade in instantly
+        stampSeq.Append(rankStampImage.DOFade(1, 0.05f));
+
+        // SLAM down (Scale from 3 -> 1 quickly with a bounce)
+        stampSeq.Join(rankStampImage.transform.DOScale(1f, 0.25f).SetEase(Ease.InBack)); // InBack feels like a heavy impact
+
+        // Shake screen and play sound when it hits
+        stampSeq.AppendCallback(() => {
+            if (sfxSource && stampThudSound) sfxSource.PlayOneShot(stampThudSound);
+
+            // Optional: Slight camera shake or UI shake if you want extra impact
+            rankStampImage.transform.DOPunchRotation(new Vector3(0, 0, 10f), 0.3f);
+        });
     }
 
     private void GenerateGrid()
     {
+        // ... (Keep your existing Grid code exactly as it was) ...
+        // Ensure you paste the grid generation logic back here!
         foreach (Transform child in gridContentParent) Destroy(child.gameObject);
-
         List<InspectableItemData> items = Scene1Manager.Instance.collectedItemsList;
-
-        // Force Rebuild FIRST so positions are calculated
         LayoutRebuilder.ForceRebuildLayoutImmediate(gridContentParent);
-
-        float delay = 0.2f; // Initial delay before items start popping
-
+        float delay = 0.3f;
         for (int i = 0; i < items.Count; i++)
         {
             InspectableItemData item = items[i];
-
             GameObject newSlot = Instantiate(itemSlotPrefab, gridContentParent, false);
-
-            // Hide initially for animation
             newSlot.transform.localScale = Vector3.zero;
-
             Image icon = newSlot.transform.Find("Icon").GetComponent<Image>();
             icon.sprite = item.itemSprite;
-
             Image border = newSlot.GetComponent<Image>();
             if (border != null)
             {
-                if (item.itemType == FloodItemType.Essential) border.color = Color.green;
-                else if (item.itemType == FloodItemType.Burden) border.color = Color.yellow;
-                else border.color = Color.red;
+                if (item.itemType == FloodItemType.Essential) border.color = new Color(0f, 1f, 0f, 0.5f);
+                else if (item.itemType == FloodItemType.Burden) border.color = new Color(1f, 0.92f, 0.016f, 0.5f);
+                else border.color = new Color(1f, 0f, 0f, 0.5f);
             }
-
             EndScreenSlot slotScript = newSlot.AddComponent<EndScreenSlot>();
             slotScript.Setup(item, this);
-
-            // --- ANIMATION: Pop in Item ---
-            newSlot.transform.DOScale(1f, 0.4f).SetEase(Ease.OutBack).SetDelay(delay + (i * 0.1f));
+            int idx = i;
+            float popDelay = delay + (idx * 0.1f);
+            newSlot.transform.DOScale(1f, 0.4f).SetEase(Ease.OutBack).SetDelay(popDelay)
+                .OnStart(() => {
+                    if (sfxSource && popSound)
+                    {
+                        sfxSource.pitch = 0.8f + (idx * 0.05f);
+                        sfxSource.PlayOneShot(popSound);
+                    }
+                });
         }
-
-        // --- ANIMATION: Pop in Main Menu Button at the very end ---
         if (mainMenuButton != null)
         {
-            float totalAnimationTime = delay + (items.Count * 0.1f) + 0.2f;
-            mainMenuButton.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack).SetDelay(totalAnimationTime);
+            float totalTime = delay + (items.Count * 0.1f) + 1.0f; // Delayed after stamp
+            mainMenuButton.SetActive(true);
+            mainMenuButton.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack).SetDelay(totalTime);
         }
     }
 
+    // ... (Keep ShowItemDetails, ClearDetailView, OnMainMenuClicked) ...
     public void ShowItemDetails(InspectableItemData item)
     {
         if (detailPanel != null)
         {
             detailPanel.SetActive(true);
-
-            // --- ANIMATION: Bounce Open ---
+            if (sfxSource) { sfxSource.pitch = 1.0f; if (paperOpenSound) sfxSource.PlayOneShot(paperOpenSound); }
             detailPanel.transform.localScale = Vector3.one * 0.8f;
             detailPanel.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
         }
-
         isDetailViewOpen = true;
-
-        if (largeItemImage != null)
-        {
-            largeItemImage.sprite = item.itemSprite;
-            largeItemImage.gameObject.SetActive(true);
-        }
-
+        if (largeItemImage != null) { largeItemImage.sprite = item.itemSprite; largeItemImage.gameObject.SetActive(true); }
         if (itemNameText != null) itemNameText.text = item.itemName;
         if (reasonText != null) reasonText.text = item.educationalTip;
-
-        if (sisterFaceImage != null)
-        {
-            sisterFaceImage.gameObject.SetActive(true);
-            if (item.sisterFeedbackSprite != null)
-                sisterFaceImage.sprite = item.sisterFeedbackSprite;
-            else
-                sisterFaceImage.sprite = defaultSisterSprite;
-        }
+        if (sisterFaceImage != null) { sisterFaceImage.gameObject.SetActive(true); sisterFaceImage.sprite = (item.sisterFeedbackSprite != null) ? item.sisterFeedbackSprite : defaultSisterSprite; }
     }
-
-    public void ClearDetailView()
-    {
-        if (detailPanel != null) detailPanel.SetActive(false);
-        isDetailViewOpen = false;
-
-        if (largeItemImage != null) largeItemImage.gameObject.SetActive(false);
-        if (itemNameText != null) itemNameText.text = "";
-        if (reasonText != null) reasonText.text = "";
-        if (sisterFaceImage != null) sisterFaceImage.sprite = defaultSisterSprite;
-    }
+    public void ClearDetailView() { if (detailPanel != null) detailPanel.SetActive(false); isDetailViewOpen = false; }
+    public void OnMainMenuClicked() { Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); }
 }

@@ -15,6 +15,11 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     public int maxCartCapacity = 9;
     public Color cartFullColor = Color.red;
 
+    [Title("Visual Feedback")]
+    [Required] public GameObject floatingTextPrefab;
+    [Tooltip("The canvas parent where popups should spawn (usually the main UI Canvas so they appear on top).")]
+    [Required] public RectTransform popupParentCanvas;
+
     [Title("Piling Effect Settings")]
     [Required] public RectTransform leftBorder;
     [Required] public RectTransform rightBorder;
@@ -29,7 +34,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     public float tossDuration = 0.4f;
 
     [Title("Pacing Constraint")]
-    [InfoBox("Time in seconds player must wait between drops.")]
     public float minDropInterval = 0.8f;
 
     [Title("Audio")]
@@ -58,6 +62,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         else { currentPileX = 0; currentPileY = 0; }
     }
 
+    // (OnPointerEnter and OnPointerExit remain the same)
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (eventData.pointerDrag == null) return;
@@ -82,16 +87,15 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         }
     }
 
+    // (OnDrop remains the same)
     public void OnDrop(PointerEventData eventData)
     {
         DraggableItem draggable = eventData.pointerDrag.GetComponent<DraggableItem>();
 
-        // 1. Initial Checks (Cart Full, Spamming, etc.)
         bool isCartFull = itemsInCartCount >= maxCartCapacity;
         if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
         bool isSpamming = (Time.time - lastDropTime < minDropInterval);
 
-        // --- NEW: CHECK FOR DUPLICATES ---
         bool isDuplicate = false;
         if (Scene1Manager.Instance != null && draggable != null && draggable.itemData != null)
         {
@@ -100,21 +104,15 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                 isDuplicate = true;
             }
         }
-        // ---------------------------------
 
-        // If ANY block condition is met, reject the drop
         if (isCartFull || isSpamming || isDuplicate)
         {
             if (draggable) draggable.ResetToDefaultColor();
             currentlyHoveringItem = null;
-
-            // Visual Shake "No!"
             transform.DOShakePosition(0.3f, 10f, 20, 90f).SetUpdate(true);
 
-            // Handle Specific Rejections
             if (isDuplicate)
             {
-                // Trigger Sister's Duplicate Complaint
                 if (SisterReactionController.Instance != null)
                     SisterReactionController.Instance.TriggerDuplicateReaction();
             }
@@ -125,7 +123,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             return;
         }
 
-        // --- SUCCESSFUL DROP ---
         if (draggable != null)
         {
             lastDropTime = Time.time;
@@ -138,11 +135,13 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             }
 
             Vector3 startDropPos = draggable.transform.position;
-            PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor, startDropPos);
+            // Get the final position of the item in the cart to spawn the popup there
+            GameObject finalItemGO = PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor, startDropPos);
 
             transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1).SetDelay(tossDuration * 0.8f).SetUpdate(true);
 
-            RunItemLogic(draggable);
+            // Pass the final position to RunItemLogic
+            RunItemLogic(draggable, finalItemGO.transform.position);
 
             itemsInCartCount++;
 
@@ -154,6 +153,7 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         currentlyHoveringItem = null;
     }
 
+    // (PlaceItemInPile remains the same)
     private GameObject PlaceItemInPile(Sprite itemSprite, Color itemColor, Vector3 startWorldPos)
     {
         if (cartContentParent == null || cartItemPrefab == null) return null;
@@ -203,17 +203,16 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         return newItemGO;
     }
 
-    private void RunItemLogic(DraggableItem draggable)
+    // --- UPDATED RUN ITEM LOGIC ---
+    private void RunItemLogic(DraggableItem draggable, Vector3 spawnPosition)
     {
         if (draggable.itemData == null) return;
 
-        // 1. Trigger Sister Dialogue
         if (draggable.itemData.sisterReaction != null)
         {
             DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
         }
 
-        // 2. Handle Stats (HP/Morale/Shakes)
         if (SurvivalMeter.Instance != null)
         {
             switch (draggable.itemData.itemType)
@@ -222,6 +221,8 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                     SurvivalMeter.Instance.HandleEssentialItem(draggable.itemData.impactValue);
                     if (SisterReactionController.Instance != null)
                         SisterReactionController.Instance.TriggerPositiveSound();
+                    // SPAWN POPUP: Green, +Value
+                    SpawnPopup($"+{draggable.itemData.impactValue} Survival!", Color.green, spawnPosition);
                     break;
 
                 case FloodItemType.Burden:
@@ -229,6 +230,8 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                     if (UIShake.Instance != null) UIShake.Instance.ShakeBurden();
                     if (SisterReactionController.Instance != null)
                         SisterReactionController.Instance.TriggerNegativeSound();
+                    // SPAWN POPUP: Yellow, Max Down
+                    SpawnPopup("Max HP Down!", Color.yellow, spawnPosition);
                     break;
 
                 case FloodItemType.Wasteful:
@@ -239,16 +242,40 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
                     if (LightFlickerController.Instance != null)
                         LightFlickerController.Instance.OnGridDamaged(0.1f);
+                    // SPAWN POPUP: Red, -Value
+                    SpawnPopup($"-{draggable.itemData.impactValue} Damage!", Color.red, spawnPosition);
                     break;
             }
         }
 
-        // 3. Handle Mess (MOVED OUTSIDE SWITCH)
-        // Now, ANY item (Burden or Wasteful) will trigger the minigame if it has a texture assigned.
         if (CleanupManager.Instance != null)
         {
-            // The Manager already checks if messTexture is null, so this is safe to call for every item.
             CleanupManager.Instance.TriggerMess(draggable.itemData);
+        }
+    }
+
+    // --- NEW HELPER FUNCTION ---
+    private void SpawnPopup(string text, Color color, Vector3 worldPosition)
+    {
+        if (floatingTextPrefab == null || popupParentCanvas == null) return;
+
+        // 1. Instantiate WITHOUT a parent first to avoid the "Persistent" error
+        GameObject popupGO = Instantiate(floatingTextPrefab);
+
+        // 2. Manually set the parent
+        popupGO.transform.SetParent(popupParentCanvas);
+
+        // 3. Reset the scale (Important! Sometimes reparenting messes up UI scale)
+        popupGO.transform.localScale = Vector3.one;
+
+        // 4. Set the position
+        popupGO.transform.position = worldPosition;
+
+        // 5. Initialize
+        FloatingText popupScript = popupGO.GetComponent<FloatingText>();
+        if (popupScript != null)
+        {
+            popupScript.Initialize(text, color);
         }
     }
 }

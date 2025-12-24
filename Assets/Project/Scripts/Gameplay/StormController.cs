@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
-using DG.Tweening; // Keep DOTween
+using DG.Tweening;
 
 public class StormController : MonoBehaviour
 {
@@ -29,14 +29,16 @@ public class StormController : MonoBehaviour
 
     [Title("Audio Ducking")]
     [ReadOnly]
-    public float masterVolumeMultiplier = 1.0f; // New Control Variable for Ducking
+    public float masterVolumeMultiplier = 1.0f;
 
     [Title("Sister Reactions")]
-    [InfoBox("Dialogue nodes to play when thunder strikes.")]
     public List<DialogueNode> thunderReactionNodes;
 
     private float thunderTimer;
     private float initialLevelTime;
+
+    // --- NEW FLAG ---
+    private bool isStormActive = true;
 
     private void Awake()
     {
@@ -46,19 +48,17 @@ public class StormController : MonoBehaviour
 
     private void Start()
     {
+        isStormActive = true; // Reset
+
         if (stormOverlayPanel != null)
             stormOverlayPanel.color = normalStormColor;
 
         ResetTimer();
 
         if (Scene1Manager.Instance != null)
-        {
             initialLevelTime = Scene1Manager.Instance.levelTimeInSeconds;
-        }
         else
-        {
             initialLevelTime = 120f;
-        }
 
         if (rainAudioSource != null)
         {
@@ -69,10 +69,9 @@ public class StormController : MonoBehaviour
 
     private void Update()
     {
-        if (Time.timeScale == 0) return;
+        // --- STOP CHECK ---
+        if (!isStormActive || Time.timeScale == 0) return;
 
-        // --- DYNAMIC DIFFICULTY (PANIC PHASE) ---
-        // As time drops from 120s to 0s, multiplier goes from 1.0 to 0.2
         float timeRatio = 1.0f;
         if (Scene1Manager.Instance != null)
         {
@@ -80,21 +79,34 @@ public class StormController : MonoBehaviour
         }
         float panicMultiplier = Mathf.Clamp(timeRatio, 0.2f, 1.0f);
 
-        // Countdown
         thunderTimer -= Time.deltaTime;
 
-        // Thunder logic
         if (thunderTimer <= 0)
         {
             TriggerThunder();
-            // Reset timer using the panic multiplier (faster thunder at end of level)
             float nextDelay = Random.Range(minThunderInterval, maxThunderInterval) * panicMultiplier;
             thunderTimer = nextDelay;
         }
 
-        // Always update rain volume
         HandleRainVolume();
     }
+
+    // --- NEW METHOD TO STOP STORM ---
+    public void StopStorm()
+    {
+        isStormActive = false;
+        StopAllCoroutines();
+
+        // Kill thunder
+        if (thunderAudioSource != null) thunderAudioSource.Stop();
+
+        // Fade out rain nicely
+        if (rainAudioSource != null)
+        {
+            rainAudioSource.DOFade(0f, 2.0f);
+        }
+    }
+    // --------------------------------
 
     private void HandleRainVolume()
     {
@@ -103,8 +115,6 @@ public class StormController : MonoBehaviour
         float currentTime = Scene1Manager.Instance.currentTime;
         float progress = 1f - (currentTime / initialLevelTime);
 
-        // MODIFIED: We multiply the calculation by our new masterVolumeMultiplier
-        // This allows the SisterReactionController to "duck" the volume without breaking the rain progression
         float baseVolume = Mathf.Lerp(startRainVolume, endRainVolume, progress);
         rainAudioSource.volume = baseVolume * masterVolumeMultiplier;
     }
@@ -117,38 +127,31 @@ public class StormController : MonoBehaviour
     [Button("Test Thunder")]
     public void TriggerThunder()
     {
-        // 1. Shake
-        if (UIShake.Instance != null)
-        {
-            UIShake.Instance.ShakeBurden();
-        }
+        if (!isStormActive) return;
 
-        // 2. Play Sound
+        if (UIShake.Instance != null) UIShake.Instance.ShakeBurden();
+
         if (thunderAudioSource != null && thunderSound != null)
-        {
             thunderAudioSource.PlayOneShot(thunderSound);
-        }
 
-        // 3. Visual Flash
-        if (stormOverlayPanel != null)
+        if (GlobalSettingsManager.IsFlashingAllowed)
         {
-            Sequence stormSeq = DOTween.Sequence();
-            stormSeq.Append(stormOverlayPanel.DOColor(thunderFlashColor, 0.1f));
-            stormSeq.Append(stormOverlayPanel.DOColor(normalStormColor, 1.5f));
+            if (stormOverlayPanel != null)
+            {
+                Sequence stormSeq = DOTween.Sequence();
+                stormSeq.Append(stormOverlayPanel.DOColor(thunderFlashColor, 0.1f));
+                stormSeq.Append(stormOverlayPanel.DOColor(normalStormColor, 1.5f));
+            }
         }
 
-        // 4. Sister Reaction (Dialogue & Face)
-        // If we have dialogue nodes, pick one randomly and play it
         if (DialogueManager.Instance != null && thunderReactionNodes != null && thunderReactionNodes.Count > 0)
         {
-            // Only trigger occasionally (e.g., 50% chance) so she doesn't talk every single thunder strike
             if (Random.value > 0.5f)
             {
                 DialogueNode randomReaction = thunderReactionNodes[Random.Range(0, thunderReactionNodes.Count)];
                 DialogueManager.Instance.StartDialogue(randomReaction);
             }
         }
-        // Fallback: visual face change only if no dialogue or chance failed
         else if (DialogueManager.Instance != null && Random.value > 0.5f)
         {
             DialogueManager.Instance.ForcePortrait(SisterMood.Frown);

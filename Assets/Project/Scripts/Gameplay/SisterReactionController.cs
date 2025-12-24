@@ -18,8 +18,8 @@ public class SisterReactionController : MonoBehaviour
     [InfoBox("Dialogue when picking 3 burden items in a row.")]
     public DialogueNode specialAnnoyedNode;
 
-    [InfoBox("Dialogue when trying to add the same item twice.")] // <--- NEW
-    public DialogueNode duplicateAttemptNode;                    // <--- NEW
+    [InfoBox("Dialogue when trying to add the same item twice.")]
+    public DialogueNode duplicateAttemptNode;
 
     [Title("Audio")]
     [Required] public AudioSource reactionAudioSource;
@@ -45,12 +45,16 @@ public class SisterReactionController : MonoBehaviour
     private int burdenStreak = 0;
     private Dictionary<AudioSource, float> originalVolumes = new Dictionary<AudioSource, float>();
 
+    // --- NEW FLAG ---
+    private bool areReactionsActive = true;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
         lastInputTime = Time.time;
+        areReactionsActive = true; // Reset on load
 
         if (otherSourcesToDuck != null)
         {
@@ -63,6 +67,9 @@ public class SisterReactionController : MonoBehaviour
 
     private void Update()
     {
+        // --- STOP CHECK ---
+        if (!areReactionsActive) return;
+
         if (Input.anyKey || Input.GetAxis("Mouse X") != 0 || Input.GetAxis("Mouse Y") != 0 || Input.GetMouseButton(0))
         {
             ResetIdle();
@@ -84,8 +91,19 @@ public class SisterReactionController : MonoBehaviour
         }
     }
 
+    // --- NEW METHOD TO STOP SISTER ---
+    public void StopBehaviors()
+    {
+        areReactionsActive = false; // Stops Update loop
+        StopAllCoroutines();
+        if (reactionAudioSource != null) reactionAudioSource.Stop();
+    }
+    // ---------------------------------
+
     public void RegisterDrop(FloodItemType type)
     {
+        if (!areReactionsActive) return; // Block reactions if game over
+
         if (type == FloodItemType.Burden)
         {
             burdenStreak++;
@@ -102,22 +120,16 @@ public class SisterReactionController : MonoBehaviour
         }
     }
 
-    // --- NEW: DUPLICATE TRIGGER ---
     public void TriggerDuplicateReaction()
     {
-        // 1. Play Negative Sound
+        if (!areReactionsActive) return;
         PlayRandomSound(negativeReactionSounds);
-
-        // 2. Play Dialogue
         if (duplicateAttemptNode != null)
         {
             DialogueManager.Instance.StartDialogue(duplicateAttemptNode);
         }
-
-        // 3. Reset Idle timer so she doesn't interrupt herself
         ResetIdle();
     }
-    // ------------------------------
 
     public void RegisterHoverStart(DraggableItem item)
     {
@@ -135,11 +147,11 @@ public class SisterReactionController : MonoBehaviour
         }
     }
 
-    public void TriggerAlert() { PlaySound(alertSound); }
+    public void TriggerAlert() { if (areReactionsActive) PlaySound(alertSound); }
 
-    public void TriggerPositiveSound() { PlayRandomSound(positiveReactionSounds); }
+    public void TriggerPositiveSound() { if (areReactionsActive) PlayRandomSound(positiveReactionSounds); }
 
-    public void TriggerNegativeSound() { PlayRandomSound(negativeReactionSounds); }
+    public void TriggerNegativeSound() { if (areReactionsActive) PlayRandomSound(negativeReactionSounds); }
 
     private void ResetIdle()
     {
