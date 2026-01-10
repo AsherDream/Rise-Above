@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
-using DG.Tweening; // Required for DOTween
+using DG.Tweening;
 
 [RequireComponent(typeof(RectTransform))]
 [RequireComponent(typeof(CanvasGroup))]
@@ -52,6 +52,7 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
 
         originalScale = transform.localScale;
 
+        // UPDATED: Using FindFirstObjectByType to avoid warning
         itemInspector = FindFirstObjectByType<ItemInspector>();
         if (itemInspector == null)
         {
@@ -128,6 +129,12 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // --- 1. TUTORIAL LOCK CHECK ---
+        // If Drag is not allowed yet, stop immediately. 
+        // This prevents the item from detaching from the shelf.
+        if (TutorialManager.IsDragAllowed == false) return;
+        // ------------------------------
+
         if (ItemInspector.IsInspecting) return;
         if (eventData.button == PointerEventData.InputButton.Right) return;
 
@@ -149,6 +156,10 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
 
     public void OnDrag(PointerEventData eventData)
     {
+        // --- 2. TUTORIAL LOCK CHECK (Safety) ---
+        if (TutorialManager.IsDragAllowed == false) return;
+        // ---------------------------------------
+
         if (ItemInspector.IsInspecting) return;
         if (eventData.button == PointerEventData.InputButton.Right) return;
 
@@ -157,6 +168,8 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        // If blockRaycasts is true, it means OnBeginDrag probably never ran or finished,
+        // so we shouldn't run end logic.
         if (canvasGroup.blocksRaycasts == true) return;
 
         canvasGroup.alpha = 1.0f;
@@ -176,7 +189,6 @@ public class DraggableItem : MonoBehaviour, IPointerDownHandler, IBeginDragHandl
         }
     }
 
-    // Safety cleanup just in case
     private void OnDestroy()
     {
         transform.DOKill();

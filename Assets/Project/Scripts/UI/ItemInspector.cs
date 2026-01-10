@@ -73,6 +73,8 @@ public class ItemInspector : MonoBehaviour
     {
         if (data == null || data.itemSprite == null) return;
 
+        FindFirstObjectByType<TutorialManager>()?.OnInspectionOpened();
+
         Debug.Log($"[ItemInspector] Inspecting item: {data.itemName}");
 
         inspectedItemImage.sprite = data.itemSprite;
@@ -134,7 +136,7 @@ public class ItemInspector : MonoBehaviour
         {
             if (descriptionText == null) yield break;
             descriptionText.text += letter;
-            yield return new WaitForSeconds(typewriterSpeed);
+            yield return new WaitForSecondsRealtime(typewriterSpeed);
         }
 
         // STOP PLAYING AUDIO WHEN DONE

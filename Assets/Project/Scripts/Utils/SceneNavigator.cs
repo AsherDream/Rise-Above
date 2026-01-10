@@ -5,39 +5,48 @@ using Sirenix.OdinInspector;
 public class SceneNavigator : MonoBehaviour
 {
     [Title("Scene Management")]
-    public string gameSceneName = "Scene1";
+    public string gameSceneName = "SuperMarket_Scene"; // Make sure this matches your scene name!
 
     [Title("Optional: Main Menu Buttons")]
     [Tooltip("Drag the parent object of your Main Menu buttons here if you want to hide them when Options are open.")]
     public GameObject mainMenuButtonsContainer;
 
-    // --- 1. SPECIFIC FUNCTION (For Main Menu "New Game") ---
+    // --- 1. SPECIFIC FUNCTION (Linked to Start Button) ---
     public void StartGame()
     {
-        // Wrapper that just calls the generic one with the default name
         LoadScene(gameSceneName);
     }
 
-    // --- 2. GENERIC FUNCTION ---
+    // --- 2. GENERIC FUNCTION (The Bridge) ---
     public void LoadScene(string sceneName)
     {
         Debug.Log($"[SceneNavigator] Attempting to load: {sceneName}");
 
-        // 1. Reset Global UI if it exists (so menus don't get stuck open)
+        // 1. Reset Global UI so menus don't get stuck
         if (PanelManager.Instance != null)
         {
             PanelManager.Instance.HideAll();
         }
 
-        // 2. FORCE TIME TO RESUME (The Fix!)
-        // Unity remembers TimeScale between scenes. If you were paused, 
-        // the next scene would be frozen without this line.
+        // 2. FORCE TIME TO RESUME
+        // Critical: If time is 0, the fade animation might not play!
         Time.timeScale = 1f;
 
-        // 3. Check if scene is valid before loading
+        // 3. Check if scene is valid
         if (Application.CanStreamedLevelBeLoaded(sceneName))
         {
-            SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+            // --- THE CHANGE IS HERE ---
+            // Try to use the smooth transition first
+            if (SceneTransitionManager.Instance != null)
+            {
+                SceneTransitionManager.Instance.LoadScene(sceneName);
+            }
+            else
+            {
+                // Fallback: If no transition manager exists, load instantly
+                Debug.LogWarning("SceneTransitionManager not found. Loading instantly.");
+                SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+            }
         }
         else
         {
@@ -52,10 +61,6 @@ public class SceneNavigator : MonoBehaviour
         {
             PanelManager.Instance.OpenSettings();
         }
-        else
-        {
-            Debug.LogError("PanelManager not found! Is Global UI loaded?");
-        }
     }
 
     public void OpenGlobalExit()
@@ -63,10 +68,6 @@ public class SceneNavigator : MonoBehaviour
         if (PanelManager.Instance != null)
         {
             PanelManager.Instance.OpenExitConfirm();
-        }
-        else
-        {
-            Debug.LogError("PanelManager not found! Is Global UI loaded?");
         }
     }
 }

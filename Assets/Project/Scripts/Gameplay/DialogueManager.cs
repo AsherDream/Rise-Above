@@ -11,7 +11,7 @@ public class DialogueManager : MonoBehaviour
     [Title("Settings")]
     [InfoBox("How long the dialogue stays on screen before auto-closing.")]
     [Range(1f, 10f)]
-    public float dialogueDuration = 5f; // Default extended to 5 seconds
+    public float dialogueDuration = 5f;
 
     [Title("UI References")]
     [Required] public GameObject dialoguePanel;
@@ -19,14 +19,11 @@ public class DialogueManager : MonoBehaviour
     [Required] public TextMeshProUGUI speakerNameText;
     [Required] public TextMeshProUGUI dialogueText;
 
-    // REMOVED: ChoicesContainer and ChoiceButtonPrefab
-
     [Title("Mood Configuration")]
-    [InfoBox("Assign the sprite for each mood here")]
     public List<MoodMapping> moodSprites;
 
     private DialogueNode currentNode;
-    private Coroutine autoCloseCoroutine; // To close dialogue automatically
+    private Coroutine autoCloseCoroutine;
 
     [System.Serializable]
     public struct MoodMapping
@@ -43,26 +40,33 @@ public class DialogueManager : MonoBehaviour
         if (dialoguePanel != null) dialoguePanel.SetActive(false);
     }
 
+    // --- RESTORED MISSING METHOD ---
     public void ForcePortrait(SisterMood mood)
     {
         UpdatePortrait(mood);
     }
+    // -------------------------------
 
-    public void StartDialogue(DialogueNode startNode, float duration = -1f)
+    public void StartDialogue(DialogueNode startNode, bool isTutorial = false)
     {
         if (startNode == null) return;
 
-        // Use the inspector value if no specific duration is passed (passed as -1)
-        float activeDuration = duration > 0 ? duration : dialogueDuration;
-
-        // Stop any pending close timer
+        // 1. Stop any previous closing timer so it doesn't disappear randomly
         if (autoCloseCoroutine != null) StopCoroutine(autoCloseCoroutine);
 
         dialoguePanel.SetActive(true);
+
+        // Force Alpha to 1 in case it was stuck fading
+        CanvasGroup group = dialoguePanel.GetComponent<CanvasGroup>();
+        if (group != null) { group.alpha = 1f; group.blocksRaycasts = true; }
+
         DisplayNode(startNode);
 
-        // Automatically close after the set duration
-        autoCloseCoroutine = StartCoroutine(AutoCloseDialogue(activeDuration));
+        // 2. Only start Auto-Close if it is NOT a tutorial
+        if (!isTutorial)
+        {
+            autoCloseCoroutine = StartCoroutine(AutoCloseDialogue(dialogueDuration));
+        }
     }
 
     private void DisplayNode(DialogueNode node)
@@ -76,7 +80,10 @@ public class DialogueManager : MonoBehaviour
 
     private void UpdatePortrait(SisterMood mood)
     {
+        if (moodSprites == null) return;
         MoodMapping mapping = moodSprites.Find(x => x.mood == mood);
+
+        // Ensure we found a mapping and the sprite is valid
         if (mapping.sprite != null)
         {
             sisterPortraitImage.sprite = mapping.sprite;
@@ -87,8 +94,6 @@ public class DialogueManager : MonoBehaviour
     {
         dialoguePanel.SetActive(false);
         currentNode = null;
-
-        // --- NEW: Reset Sister to Normal Mood ---
         UpdatePortrait(SisterMood.Normal);
     }
 

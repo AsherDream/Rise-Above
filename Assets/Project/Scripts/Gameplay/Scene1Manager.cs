@@ -32,8 +32,6 @@ public class Scene1Manager : MonoBehaviour
     [Required] public GameObject gameOverPanel;
     [Required] public TextMeshProUGUI gameOverReasonText;
 
-    // --- REMOVED: specialThanksPanel (It lives in Global UI now) --- 
-
     [ReadOnly]
     public List<InspectableItemData> collectedItemsList = new List<InspectableItemData>();
 
@@ -65,7 +63,6 @@ public class Scene1Manager : MonoBehaviour
         // Hide panels
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
-        // SpecialThanks is handled by PanelManager now, so we don't hide it here.
 
         // Disable checkout initially
         checkoutButton.interactable = false;
@@ -169,27 +166,43 @@ public class Scene1Manager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
+    // --- UPDATED: Uses SceneTransitionManager for Retry ---
     public void RetryLevel()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        string currentSceneName = SceneManager.GetActiveScene().name; // likely "SuperMarket_Scene"
+
+        if (SceneTransitionManager.Instance != null)
+        {
+            SceneTransitionManager.Instance.LoadScene(currentSceneName);
+        }
+        else
+        {
+            // Fallback if testing scene directly
+            SceneManager.LoadScene(currentSceneName);
+        }
     }
 
+    // --- UPDATED: Uses SceneTransitionManager for Menu ---
     public void ReturnToMenu()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("MainMenu");
+        if (SceneTransitionManager.Instance != null)
+        {
+            SceneTransitionManager.Instance.LoadScene("MainMenu");
+        }
+        else
+        {
+            // Fallback
+            SceneManager.LoadScene("MainMenu");
+        }
     }
 
-    // --- UPDATED LOGIC ---
     public void GoToSpecialThanks()
     {
-        // 1. Hide the local panels in this scene
         if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
 
-        // 2. Ask the Global PanelManager to show the credits
-        // Since PanelManager is in UI_Global (a different scene), we access it via Singleton
         if (PanelManager.Instance != null)
         {
             PanelManager.Instance.OpenCredits();

@@ -229,6 +229,34 @@ public class EndScreenManager : MonoBehaviour
         if (reasonText != null) reasonText.text = item.educationalTip;
         if (sisterFaceImage != null) { sisterFaceImage.gameObject.SetActive(true); sisterFaceImage.sprite = (item.sisterFeedbackSprite != null) ? item.sisterFeedbackSprite : defaultSisterSprite; }
     }
+
     public void ClearDetailView() { if (detailPanel != null) detailPanel.SetActive(false); isDetailViewOpen = false; }
-    public void OnMainMenuClicked() { Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); }
+
+    public void OnMainMenuClicked()
+    {
+        Time.timeScale = 1f; // Always unpause!
+
+        if (SceneTransitionManager.Instance != null)
+        {
+            SceneTransitionManager.Instance.LoadScene("MainMenu");
+        }
+        else
+        {
+            // Fallback if manager is missing
+            SceneManager.LoadScene("MainMenu");
+        }
+    }
+
+    private void Update()
+    {
+        // FIX: Now we actually use the variable 'isDetailViewOpen'
+        if (isDetailViewOpen)
+        {
+            // If the popup is open, listen for Escape or Right Click to close it
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1))
+            {
+                ClearDetailView();
+            }
+        }
+    }
 }

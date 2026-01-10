@@ -553,8 +553,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1194959083}
         m_TargetAssemblyTypeName: SceneNavigator, Assembly-CSharp
-        m_MethodName: LoadScene
-        m_Mode: 5
+        m_MethodName: StartGame
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -1249,7 +1249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db43c1fe103455e4f986bd04a6fe133e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneNavigator
-  gameSceneName: Scene1
+  gameSceneName: SuperMarket_Scene
   mainMenuButtonsContainer: {fileID: 0}
 --- !u!1 &1391511211
 GameObject:

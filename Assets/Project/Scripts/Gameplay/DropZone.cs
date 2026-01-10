@@ -3,6 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
 using DG.Tweening;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(Image))]
 public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
@@ -17,8 +18,10 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
     [Title("Visual Feedback")]
     [Required] public GameObject floatingTextPrefab;
-    [Tooltip("The canvas parent where popups should spawn (usually the main UI Canvas so they appear on top).")]
     [Required] public RectTransform popupParentCanvas;
+
+    [Title("Game Flow")]
+    [Required] public GameObject checkoutButton;
 
     [Title("Piling Effect Settings")]
     [Required] public RectTransform leftBorder;
@@ -46,10 +49,22 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     private float currentPileX;
     private float currentPileY;
 
+    private HashSet<InspectableItemData> addedItems = new HashSet<InspectableItemData>();
+
     private void Awake()
     {
         InitializePileCursor();
         if (dropAudioSource == null) dropAudioSource = GetComponent<AudioSource>();
+
+        if (checkoutButton != null)
+        {
+            checkoutButton.SetActive(true); // Ensure it is visible
+            Button btn = checkoutButton.GetComponent<Button>();
+            if (btn != null)
+            {
+                btn.interactable = false; // Start disabled (Greyed out)
+            }
+        }
     }
 
     private void InitializePileCursor()
@@ -62,7 +77,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         else { currentPileX = 0; currentPileY = 0; }
     }
 
-    // (OnPointerEnter and OnPointerExit remain the same)
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (eventData.pointerDrag == null) return;
@@ -71,7 +85,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         {
             currentlyHoveringItem = draggable;
             bool isCartFull = itemsInCartCount >= maxCartCapacity;
-            if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
 
             if (isCartFull) { if (draggable.itemImage != null) draggable.itemImage.color = cartFullColor; }
             else { draggable.SetHoverState(true); }
@@ -87,23 +100,16 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         }
     }
 
-    // (OnDrop remains the same)
     public void OnDrop(PointerEventData eventData)
     {
+        if (TutorialManager.IsDragAllowed == false) return;
+
         DraggableItem draggable = eventData.pointerDrag.GetComponent<DraggableItem>();
+        if (draggable == null || draggable.itemData == null) return;
 
         bool isCartFull = itemsInCartCount >= maxCartCapacity;
-        if (Scene1Manager.Instance != null && Scene1Manager.Instance.IsCartFull()) isCartFull = true;
         bool isSpamming = (Time.time - lastDropTime < minDropInterval);
-
-        bool isDuplicate = false;
-        if (Scene1Manager.Instance != null && draggable != null && draggable.itemData != null)
-        {
-            if (Scene1Manager.Instance.IsItemAlreadyInCart(draggable.itemData))
-            {
-                isDuplicate = true;
-            }
-        }
+        bool isDuplicate = addedItems.Contains(draggable.itemData);
 
         if (isCartFull || isSpamming || isDuplicate)
         {
@@ -123,37 +129,56 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
             return;
         }
 
-        if (draggable != null)
+        // --- SUCCESSFUL DROP ---
+        lastDropTime = Time.time;
+        draggable.isDropSuccessful = true;
+        addedItems.Add(draggable.itemData);
+
+        TutorialManager tutorial = FindFirstObjectByType<TutorialManager>();
+        if (tutorial != null) tutorial.OnItemDragged();
+
+        if (dropAudioSource != null && dropSound != null)
         {
-            lastDropTime = Time.time;
-            draggable.isDropSuccessful = true;
+            dropAudioSource.pitch = Random.Range(0.9f, 1.1f);
+            dropAudioSource.PlayOneShot(dropSound);
+        }
 
-            if (dropAudioSource != null && dropSound != null)
+        Vector3 startDropPos = draggable.transform.position;
+        GameObject finalItemGO = PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor, startDropPos);
+
+        transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1).SetDelay(tossDuration * 0.8f).SetUpdate(true);
+
+        RunItemLogic(draggable, finalItemGO.transform.position);
+
+        itemsInCartCount++;
+
+        if (Scene1Manager.Instance != null)
+        {
+            Scene1Manager.Instance.OnItemCollected(draggable.itemData);
+        }
+
+        // --- ENABLE CHECKOUT BUTTON ---
+        if (itemsInCartCount >= maxCartCapacity)
+        {
+            if (checkoutButton != null)
             {
-                dropAudioSource.pitch = Random.Range(0.9f, 1.1f);
-                dropAudioSource.PlayOneShot(dropSound);
-            }
+                Button btn = checkoutButton.GetComponent<Button>();
+                if (btn != null)
+                {
+                    btn.interactable = true; // Unlock the button
 
-            Vector3 startDropPos = draggable.transform.position;
-            // Get the final position of the item in the cart to spawn the popup there
-            GameObject finalItemGO = PlaceItemInPile(draggable.itemImage.sprite, draggable.originalColor, startDropPos);
-
-            transform.DOPunchScale(new Vector3(0.05f, -0.05f, 0), 0.2f, 10, 1).SetDelay(tossDuration * 0.8f).SetUpdate(true);
-
-            // Pass the final position to RunItemLogic
-            RunItemLogic(draggable, finalItemGO.transform.position);
-
-            itemsInCartCount++;
-
-            if (Scene1Manager.Instance != null)
-            {
-                Scene1Manager.Instance.OnItemCollected(draggable.itemData);
+                    // SAFETY FORCE COLOR: Ensures the button is pure white (original sprite)
+                    // ignoring any weird previous tint states.
+                    Image btnImg = checkoutButton.GetComponent<Image>();
+                    if (btnImg != null) btnImg.color = Color.white;
+                }
             }
         }
+        // -----------------------------------------
+
         currentlyHoveringItem = null;
     }
 
-    // (PlaceItemInPile remains the same)
     private GameObject PlaceItemInPile(Sprite itemSprite, Color itemColor, Vector3 startWorldPos)
     {
         if (cartContentParent == null || cartItemPrefab == null) return null;
@@ -203,12 +228,14 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         return newItemGO;
     }
 
-    // --- UPDATED RUN ITEM LOGIC ---
     private void RunItemLogic(DraggableItem draggable, Vector3 spawnPosition)
     {
         if (draggable.itemData == null) return;
 
-        if (draggable.itemData.sisterReaction != null)
+        TutorialManager tutorial = FindFirstObjectByType<TutorialManager>();
+        bool isTutorialActive = (tutorial != null && tutorial.currentStep != TutorialManager.TutorialStep.Completed);
+
+        if (!isTutorialActive && draggable.itemData.sisterReaction != null)
         {
             DialogueManager.Instance.StartDialogue(draggable.itemData.sisterReaction);
         }
@@ -221,7 +248,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                     SurvivalMeter.Instance.HandleEssentialItem(draggable.itemData.impactValue);
                     if (SisterReactionController.Instance != null)
                         SisterReactionController.Instance.TriggerPositiveSound();
-                    // SPAWN POPUP: Green, +Value
                     SpawnPopup($"+{draggable.itemData.impactValue} Survival!", Color.green, spawnPosition);
                     break;
 
@@ -230,7 +256,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
                     if (UIShake.Instance != null) UIShake.Instance.ShakeBurden();
                     if (SisterReactionController.Instance != null)
                         SisterReactionController.Instance.TriggerNegativeSound();
-                    // SPAWN POPUP: Yellow, Max Down
                     SpawnPopup("Max HP Down!", Color.yellow, spawnPosition);
                     break;
 
@@ -242,7 +267,6 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 
                     if (LightFlickerController.Instance != null)
                         LightFlickerController.Instance.OnGridDamaged(0.1f);
-                    // SPAWN POPUP: Red, -Value
                     SpawnPopup($"-{draggable.itemData.impactValue} Damage!", Color.red, spawnPosition);
                     break;
             }
@@ -254,28 +278,14 @@ public class DropZone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         }
     }
 
-    // --- NEW HELPER FUNCTION ---
     private void SpawnPopup(string text, Color color, Vector3 worldPosition)
     {
         if (floatingTextPrefab == null || popupParentCanvas == null) return;
-
-        // 1. Instantiate WITHOUT a parent first to avoid the "Persistent" error
         GameObject popupGO = Instantiate(floatingTextPrefab);
-
-        // 2. Manually set the parent
         popupGO.transform.SetParent(popupParentCanvas);
-
-        // 3. Reset the scale (Important! Sometimes reparenting messes up UI scale)
         popupGO.transform.localScale = Vector3.one;
-
-        // 4. Set the position
         popupGO.transform.position = worldPosition;
-
-        // 5. Initialize
         FloatingText popupScript = popupGO.GetComponent<FloatingText>();
-        if (popupScript != null)
-        {
-            popupScript.Initialize(text, color);
-        }
+        if (popupScript != null) popupScript.Initialize(text, color);
     }
 }
