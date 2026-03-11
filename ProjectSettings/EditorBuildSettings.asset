@@ -14,5 +14,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Project/Scenes/GamePlay/SuperMarket_Scene.unity
     guid: 625e747e0b567894190a8d5e127728a8
+  - enabled: 1
+    path: Assets/Project/Scenes/GamePlay/Intro_Scene.unity
+    guid: a102969ba2157c94b98b3b4b3b600fc3
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

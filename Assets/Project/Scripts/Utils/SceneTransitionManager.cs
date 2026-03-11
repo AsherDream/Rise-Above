@@ -13,16 +13,16 @@ public class SceneTransitionManager : MonoBehaviour
     [Required] public RectTransform holeRectTransform;
     [Required] public CanvasGroup holeCanvasGroup;
 
-    [Tooltip("How long the circle takes to open/close")]
     public float transitionDuration = 1.0f;
-
-    [Tooltip("Buffer time to keep screen black before loading")]
     public float loadBufferTime = 0.5f;
 
-    // Target Size (Width/Height) when fully open. 
-    // 3000 is usually big enough to cover a 1920x1080 screen corner-to-corner.
     private Vector2 maxBufferSize = new Vector2(3000f, 3000f);
     private Vector2 minBufferSize = Vector2.zero;
+
+    private Canvas parentCanvas;
+
+    // --- NEW: Target Memory ---
+    private string expectedTargetScene = "";
 
     private void Awake()
     {
@@ -31,9 +31,15 @@ public class SceneTransitionManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
-        else
+        else if (Instance != this)
         {
             Destroy(gameObject);
+            return;
+        }
+
+        if (holeRectTransform != null)
+        {
+            parentCanvas = holeRectTransform.GetComponentInParent<Canvas>();
         }
     }
 
@@ -41,13 +47,11 @@ public class SceneTransitionManager : MonoBehaviour
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
 
-        if (holeRectTransform != null) holeRectTransform.DOKill();
-
-        // Start with hole OPEN (Game Visible)
+        ForceCanvasVisible();
         if (holeRectTransform != null)
         {
+            holeRectTransform.DOKill();
             holeRectTransform.sizeDelta = maxBufferSize;
-            holeRectTransform.localScale = Vector3.one; // Ensure scale is always 1
             if (holeCanvasGroup != null) holeCanvasGroup.blocksRaycasts = false;
         }
     }
@@ -55,28 +59,35 @@ public class SceneTransitionManager : MonoBehaviour
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (holeRectTransform != null) holeRectTransform.DOKill();
     }
 
     public void LoadScene(string sceneName)
     {
         if (holeRectTransform == null) return;
 
+        expectedTargetScene = sceneName;
+
+        Debug.Log($"[SceneTransitionManager] 1. Starting transition to scene: {sceneName}");
+
+        ForceCanvasVisible();
         holeRectTransform.DOKill();
         if (holeCanvasGroup != null) holeCanvasGroup.blocksRaycasts = true;
 
-        // 1. IRIS CLOSE (Resize to 0,0)
-        // When Size is 0, the Mask is 0, so the 'Inverse Mask' (Curtain) draws everywhere -> Black Screen.
+        // --- ADDED .SetUpdate(true) HERE ---
         holeRectTransform.DOSizeDelta(minBufferSize, transitionDuration)
             .SetEase(Ease.InOutExpo)
+            .SetUpdate(true)
             .OnComplete(() =>
             {
+                Debug.Log("[SceneTransitionManager] 2. Iris closed. Starting background load.");
                 StartCoroutine(LoadSceneAsyncRoutine(sceneName));
             });
     }
 
     private IEnumerator LoadSceneAsyncRoutine(string sceneName)
     {
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSecondsRealtime(0.1f);
 
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
         asyncLoad.allowSceneActivation = false;
@@ -86,7 +97,8 @@ public class SceneTransitionManager : MonoBehaviour
             yield return null;
         }
 
-        yield return new WaitForSeconds(loadBufferTime);
+        Debug.Log("[SceneTransitionManager] 3. Background load complete.");
+        yield return new WaitForSecondsRealtime(loadBufferTime);
         asyncLoad.allowSceneActivation = true;
     }
 
@@ -94,19 +106,39 @@ public class SceneTransitionManager : MonoBehaviour
     {
         if (holeRectTransform == null) return;
 
+        if (!string.IsNullOrEmpty(expectedTargetScene) && scene.name != expectedTargetScene)
+        {
+            return;
+        }
+
+        Debug.Log($"[SceneTransitionManager] 4. Scene '{scene.name}' active. Opening Iris...");
+
+        ForceCanvasVisible();
         holeRectTransform.DOKill();
 
-        // 1. Ensure Hole is closed
         holeRectTransform.sizeDelta = minBufferSize;
-        holeRectTransform.localScale = Vector3.one; // Reset scale just in case
+        holeRectTransform.localScale = Vector3.one;
         if (holeCanvasGroup != null) holeCanvasGroup.blocksRaycasts = true;
 
-        // 2. IRIS OPEN (Resize to 3000,3000)
+        // --- ADDED .SetUpdate(true) HERE ---
         holeRectTransform.DOSizeDelta(maxBufferSize, transitionDuration)
             .SetEase(Ease.InOutExpo)
+            .SetUpdate(true)
             .OnComplete(() =>
             {
+                Debug.Log("[SceneTransitionManager] 5. Transition fully complete.");
                 if (holeCanvasGroup != null) holeCanvasGroup.blocksRaycasts = false;
+
+                expectedTargetScene = "";
             });
+    }
+
+    private void ForceCanvasVisible()
+    {
+        if (parentCanvas != null)
+        {
+            parentCanvas.enabled = true;
+            parentCanvas.sortingOrder = 32000;
+        }
     }
 }

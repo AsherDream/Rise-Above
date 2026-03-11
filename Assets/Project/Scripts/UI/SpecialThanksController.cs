@@ -78,10 +78,23 @@ public class SpecialThanksController : MonoBehaviour, IPointerClickHandler
     {
         if (canClick)
         {
-            DOTween.KillAll();
-            if (Scene1Manager.Instance != null)
+            DOTween.KillAll(); // Stop text pulsing
+
+            // 1. Hide the credits panel so it doesn't stay on screen
+            if (PanelManager.Instance != null)
             {
-                Scene1Manager.Instance.ReturnToMenu();
+                PanelManager.Instance.HideAll();
+            }
+
+            // 2. Globally load the Main Menu with the Iris transition
+            if (SceneTransitionManager.Instance != null)
+            {
+                SceneTransitionManager.Instance.LoadScene("MainMenu");
+            }
+            else
+            {
+                // Fallback
+                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
             }
         }
     }
