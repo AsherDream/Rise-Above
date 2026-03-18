@@ -34,18 +34,29 @@ public class TutorialManager : MonoBehaviour
 
     void Start()
     {
-        // Get the script component from the hand object
         if (ghostHandObject != null)
         {
             handGuideScript = ghostHandObject.GetComponent<TutorialHandGuide>();
         }
 
-        IsDragAllowed = false;
-        SetStep(TutorialStep.Intro);
+        // --- NEW: CHECK SAVE DATA ---
+        // If PlayerPrefs has a "1" saved here, they already beat it.
+        if (PlayerPrefs.GetInt("TutorialCompleted", 0) == 1)
+        {
+            SkipTutorialSilently();
+        }
+        else
+        {
+            // First time playing! Start normally.
+            IsDragAllowed = false;
+            SetStep(TutorialStep.Intro);
+        }
     }
 
     void Update()
     {
+        if (ItemInspector.IsInspecting) return;
+
         if (currentStep == TutorialStep.Move)
         {
             if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D) ||
@@ -148,6 +159,28 @@ public class TutorialManager : MonoBehaviour
 
         if (bgScroller) bgScroller.enabled = true;
 
-        Debug.Log("Tutorial Finished!");
+        // --- NEW: SAVE TO BROWSER ---
+        PlayerPrefs.SetInt("TutorialCompleted", 1);
+        PlayerPrefs.Save();
+
+        Debug.Log("Tutorial Finished and Saved!");
+    }
+
+    private void SkipTutorialSilently()
+    {
+        currentStep = TutorialStep.Completed;
+        IsDragAllowed = true; // Let them grab items immediately
+
+        // Hide all tutorial UI
+        if (darkOverlay) darkOverlay.SetActive(false);
+        if (ghostHandObject) ghostHandObject.SetActive(false);
+        if (movementGuideScript) movementGuideScript.gameObject.SetActive(false);
+        if (mouseVisual) mouseVisual.SetActive(false);
+        if (nextButton) nextButton.SetActive(false);
+
+        // Start the game normally
+        if (bgScroller) bgScroller.enabled = true;
+
+        Debug.Log("[TutorialManager] Returning player detected. Tutorial skipped.");
     }
 }
